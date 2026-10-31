@@ -1,7 +1,11 @@
 from sqlalchemy import Boolean, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
 
 from app.infrastructure.models.base import Base
+
+if TYPE_CHECKING:
+    from app.infrastructure.models.obra_de_arte_orm import ObraDeArteORM
 
 
 class ArtistaORM(Base):
