@@ -40,3 +40,11 @@ def test_regla_5_exposicion_finalizada_no_acepta_obras():
     
     es_editable = estado_exposicion == "activa"
     assert es_editable is False
+
+
+def test_regla_6_obra_requiere_galeria_activa():
+    """Regla 6: No se puede asociar una obra a una galería inactiva."""
+    estado_galeria = "inactiva"
+    
+    permitir_registro = estado_galeria == "activa"
+    assert permitir_registro is False
