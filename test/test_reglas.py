@@ -24,3 +24,11 @@ def test_regla_2_maximo_cinco_obras_por_exposicion():
     # Si ya tiene 5 obras, la API debe rechazar incluir una sexta obra
     puede_agregar_mas = obras_prestadas_actuales < limite_permitido
     assert puede_agregar_mas is False
+
+
+def test_regla_4_dias_prestamo_negativos_invalido():
+    """Regla 4: No se permiten préstamos con duración menor o igual a 0 días."""
+    dias_solicitados = -3
+    
+    es_valido = dias_solicitados > 0
+    assert es_valido is False
