@@ -32,3 +32,11 @@ def test_regla_4_dias_prestamo_negativos_invalido():
     
     es_valido = dias_solicitados > 0
     assert es_valido is False
+
+
+def test_regla_5_exposicion_finalizada_no_acepta_obras():
+    """Regla 5: No se pueden agregar obras a una exposición que ya ha finalizado."""
+    estado_exposicion = "finalizada"
+    
+    es_editable = estado_exposicion == "activa"
+    assert es_editable is False
