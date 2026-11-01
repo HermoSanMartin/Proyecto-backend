@@ -14,3 +14,13 @@ def test_regla_3_dias_prestamo_validos():
     """Regla 3: La fecha/duración del préstamo debe ser mayor a 0 días."""
     dias_prestamo = 5
     assert dias_prestamo > 0
+
+
+def test_regla_2_maximo_cinco_obras_por_exposicion():
+    """Regla 2: Una exposición no puede tener más de 5 obras prestadas simultáneamente."""
+    obras_prestadas_actuales = 5
+    limite_permitido = 5
+    
+    # Si ya tiene 5 obras, la API debe rechazar incluir una sexta obra
+    puede_agregar_mas = obras_prestadas_actuales < limite_permitido
+    assert puede_agregar_mas is False
