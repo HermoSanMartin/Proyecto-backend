@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from enum import Enum
+from app.domain.excepciones import ReglaDeNegocioViolada
 
 
 class EstadoSolicitud(str, Enum):
@@ -20,7 +21,7 @@ class SolicitudPrestamo:
 
     def __post_init__(self) -> None:
         if self.dias_prestamo < 1:
-            raise ValueError("El préstamo debe durar al menos 1 día")
+            raise ReglaDeNegocioViolada("El préstamo debe durar al menos 1 día")
 
     @property
     def fecha_fin_prestamo(self) -> date:
@@ -34,7 +35,5 @@ class SolicitudPrestamo:
 
     def _cambiar_estado(self, nuevo_estado: EstadoSolicitud) -> None:
         if self.estado_solicitud != EstadoSolicitud.PENDIENTE:
-            raise ValueError("Solo se puede resolver una solicitud pendiente")
+            raise ReglaDeNegocioViolada("Solo se puede resolver una solicitud pendiente")
         self.estado_solicitud = nuevo_estado
-
-        
