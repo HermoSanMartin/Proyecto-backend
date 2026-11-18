@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.presentation.routers.reportes import router as reportes_router
 
 from app.presentation.error_handlers import registrar_manejadores
 from app.presentation.routers.artistas import router as artistas_router
