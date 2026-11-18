@@ -32,3 +32,10 @@ class ObraRespuesta(BaseModel):
     estilo: str
     disponible: bool
     artista_id: int
+
+class PaginaObras(BaseModel):
+    items: list[ObraRespuesta]
+    total: int
+    pagina: int
+    limite: int
+    total_paginas: int

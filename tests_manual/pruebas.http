@@ -1,0 +1,68 @@
+@base = http://127.0.0.1:8000/api/v1
+
+### CASO 1 - CRUD: crear una obra
+# Esperado: 201 Created con id y disponible=true
+POST {{base}}/obras
+Content-Type: application/json
+
+{
+  "titulo": "La Noche",
+  "precio_estimado": 5000,
+  "anio_creacion": 1998,
+  "estilo": "Impresionismo",
+  "artista_id": 1
+}
+
+### CASO 2 - Validación inválida: precio negativo
+# Esperado: 422 con {"error": {"code": "VALIDATION_ERROR", ...}}
+POST {{base}}/obras
+Content-Type: application/json
+
+{
+  "titulo": "Obra con error",
+  "precio_estimado": -5,
+  "anio_creacion": 1998,
+  "estilo": "Impresionismo",
+  "artista_id": 1
+}
+
+### CASO 3 - Recurso inexistente
+# Esperado: 404 con {"error": {"code": "RESOURCE_NOT_FOUND", ...}}
+GET {{base}}/obras/999
+
+### CASO 4a - Regla de negocio: aprobar la solicitud 1 (presta la obra 1)
+# Esperado: 200 con estado_solicitud=APROBADO
+PATCH {{base}}/solicitudes-prestamo/1/aprobar
+
+### CASO 4b - Regla 1: pedir en préstamo la obra 1, que ya no está disponible
+# Esperado: 400 con {"error": {"code": "BUSINESS_RULE_VIOLATION", ...}}
+POST {{base}}/solicitudes-prestamo
+Content-Type: application/json
+
+{
+  "obra_id": 1,
+  "exposicion_id": 2,
+  "dias_prestamo": 10
+}
+
+### CASO 5 - Filtro, orden y paginación
+# Esperado: 200, total=3 (obras de Surrealismo), limite=2, total_paginas=2,
+# primero "Las dos Fridas" (9000) y luego "La columna rota" (8000)
+GET {{base}}/obras?estilo=Surrealismo&ordenar_por=precio_estimado&direccion=desc&pagina=1&limite=2
+
+### CASO 6 - Persistencia
+# Paso manual: detén uvicorn (Ctrl+C), ejecuta "docker compose restart db",
+# vuelve a iniciar uvicorn y ejecuta esta petición.
+# Esperado: 200, y los datos de Frida siguen ahí
+GET {{base}}/artistas/1
+
+### CASO EXTRA - Conflicto: correo duplicado
+# Esperado: 409 con {"error": {"code": "CONFLICT", ...}}
+POST {{base}}/artistas
+Content-Type: application/json
+
+{
+  "nombre_artistico": "Otra Frida",
+  "email": "frida@galeria.cl",
+  "nacionalidad": "Mexicana"
+}
