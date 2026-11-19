@@ -2,11 +2,9 @@ from fastapi import APIRouter, Depends, status
 
 from app.application.services.exposicion_service import ExposicionService
 from app.domain.exposicion import Exposicion
-from app.presentation.dependencies import obtener_servicio_exposicion
-from app.presentation.schemas.exposicion_schema import (
-    ExposicionCrear,
-    ExposicionRespuesta,
-)
+from app.domain.usuario import Usuario
+from app.presentation.dependencies import exigir_admin, obtener_servicio_exposicion
+from app.presentation.schemas.exposicion_schema import ExposicionCrear, ExposicionRespuesta
 
 router = APIRouter(prefix="/api/v1/exposiciones", tags=["Exposiciones"])
 
@@ -15,13 +13,18 @@ router = APIRouter(prefix="/api/v1/exposiciones", tags=["Exposiciones"])
     "",
     response_model=ExposicionRespuesta,
     status_code=status.HTTP_201_CREATED,
-    summary="Registrar una exposición",
-    description="Crea una exposición. La fecha de término no puede ser anterior a la de inicio.",
-    responses={422: {"description": "Datos inválidos o fechas incoherentes"}},
+    summary="Registrar una exposicion (Solo Admin)",
+    description="Crea una exposicion. Requiere rol administrador.",
+    responses={
+        401: {"description": "No autenticado"},
+        403: {"description": "Permisos insuficientes"},
+        422: {"description": "Datos invalidos o fechas incoherentes"},
+    },
 )
 def crear_exposicion(
     datos: ExposicionCrear,
     servicio: ExposicionService = Depends(obtener_servicio_exposicion),
+    _admin: Usuario = Depends(exigir_admin),
 ):
     return servicio.crear(Exposicion(**datos.model_dump()))
 
@@ -32,18 +35,16 @@ def crear_exposicion(
     summary="Listar exposiciones",
     description="Devuelve todas las exposiciones registradas.",
 )
-def listar_exposiciones(
-    servicio: ExposicionService = Depends(obtener_servicio_exposicion),
-):
+def listar_exposiciones(servicio: ExposicionService = Depends(obtener_servicio_exposicion)):
     return servicio.listar()
 
 
 @router.get(
     "/{exposicion_id}",
     response_model=ExposicionRespuesta,
-    summary="Obtener una exposición por ID",
-    description="Devuelve los datos de una exposición.",
-    responses={404: {"description": "La exposición no existe"}},
+    summary="Obtener una exposicion por ID",
+    description="Devuelve los datos de una exposicion.",
+    responses={404: {"description": "La exposicion no existe"}},
 )
 def obtener_exposicion(
     exposicion_id: int,
