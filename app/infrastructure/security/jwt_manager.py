@@ -1,6 +1,6 @@
-﻿from datetime import UTC, datetime, timedelta
 import hashlib
 import secrets
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import jwt
@@ -21,7 +21,9 @@ def crear_access_token(usuario_id: int, rol: str, token_version: int) -> str:
         "iat": int(ahora.timestamp()),
         "exp": int(expira.timestamp()),
     }
-    return jwt.encode(payload, configuracion.jwt_secret_key, algorithm=configuracion.jwt_algorithm)
+    return jwt.encode(
+        payload, configuracion.jwt_secret_key, algorithm=configuracion.jwt_algorithm
+    )
 
 
 def verificar_access_token(token: str) -> dict[str, Any]:
@@ -50,7 +52,9 @@ def crear_recovery_token(usuario_id: int, jti: str) -> tuple[str, datetime]:
         "iat": int(ahora.timestamp()),
         "exp": int(expira.timestamp()),
     }
-    token = jwt.encode(payload, configuracion.jwt_secret_key, algorithm=configuracion.jwt_algorithm)
+    token = jwt.encode(
+        payload, configuracion.jwt_secret_key, algorithm=configuracion.jwt_algorithm
+    )
     return token, expira
 
 

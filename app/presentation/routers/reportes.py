@@ -1,6 +1,7 @@
 """
 Modulo de reportes y estadisticas para el sistema de galerias.
 """
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -28,12 +29,16 @@ def obtener_resumen_estadisticas(db: Session = Depends(get_db)):
     Retorna estadisticas generales acumuladas en el sistema.
     """
     total_obras = db.query(models.Obra).count() if hasattr(models, "Obra") else 0
-    total_galerias = db.query(models.Galeria).count() if hasattr(models, "Galeria") else 0
-    total_prestamos = db.query(models.Prestamo).count() if hasattr(models, "Prestamo") else 0
+    total_galerias = (
+        db.query(models.Galeria).count() if hasattr(models, "Galeria") else 0
+    )
+    total_prestamos = (
+        db.query(models.Prestamo).count() if hasattr(models, "Prestamo") else 0
+    )
 
     return {
         "total_obras": total_obras,
         "total_galerias": total_galerias,
         "total_prestamos": total_prestamos,
-        "estado_sistema": "Operativo"
+        "estado_sistema": "Operativo",
     }

@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
@@ -26,7 +26,9 @@ class UsuarioRepository:
         return orm_a_dominio(orm) if orm else None
 
     def obtener_por_email(self, email: str) -> Usuario | None:
-        orm = self.db.scalar(select(UsuarioORM).where(UsuarioORM.email == email.lower().strip()))
+        orm = self.db.scalar(
+            select(UsuarioORM).where(UsuarioORM.email == email.lower().strip())
+        )
         return orm_a_dominio(orm) if orm else None
 
     def actualizar(self, usuario: Usuario) -> Usuario | None:
@@ -131,7 +133,9 @@ class UsuarioRepository:
         self.db.refresh(registro)
         return registro
 
-    def obtener_token_recuperacion_por_jti(self, jti: str) -> TokenRecuperacionORM | None:
+    def obtener_token_recuperacion_por_jti(
+        self, jti: str
+    ) -> TokenRecuperacionORM | None:
         return self.db.scalar(
             select(TokenRecuperacionORM).where(TokenRecuperacionORM.jti == jti)
         )

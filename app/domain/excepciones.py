@@ -1,4 +1,4 @@
-﻿class ErrorDeDominio(Exception):
+class ErrorDeDominio(Exception):
     codigo = "DOMAIN_ERROR"
 
     def __init__(self, mensaje: str, detalles: list | None = None) -> None:

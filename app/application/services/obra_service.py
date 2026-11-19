@@ -5,7 +5,9 @@ from app.infrastructure.repositories.obra_repository import ObraRepository
 
 
 class ObraService:
-    def __init__(self, repo_obras: ObraRepository, repo_artistas: ArtistaRepository) -> None:
+    def __init__(
+        self, repo_obras: ObraRepository, repo_artistas: ArtistaRepository
+    ) -> None:
         self.repo_obras = repo_obras
         self.repo_artistas = repo_artistas
 

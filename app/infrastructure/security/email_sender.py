@@ -1,5 +1,5 @@
-﻿from email.message import EmailMessage
 import smtplib
+from email.message import EmailMessage
 
 from app.infrastructure.config import configuracion
 
@@ -16,5 +16,7 @@ class ServicioCorreoSMTP:
             f"{enlace}\n\n"
             "Si no realizaste esta solicitud, ignora este mensaje."
         )
-        with smtplib.SMTP(configuracion.smtp_host, configuracion.smtp_port, timeout=5) as smtp:
+        with smtplib.SMTP(
+            configuracion.smtp_host, configuracion.smtp_port, timeout=5
+        ) as smtp:
             smtp.send_message(mensaje)

@@ -18,8 +18,10 @@ router = APIRouter(prefix="/api/v1/artistas", tags=["Artistas"])
     status_code=status.HTTP_201_CREATED,
     summary="Registrar un artista",
     description="Crea un artista nuevo. El correo electrónico debe ser único.",
-    responses={409: {"description": "Ya existe un artista con ese correo"},
-               422: {"description": "Datos inválidos"}},
+    responses={
+        409: {"description": "Ya existe un artista con ese correo"},
+        422: {"description": "Datos inválidos"},
+    },
 )
 def crear_artista(
     datos: ArtistaCrear,
@@ -57,8 +59,10 @@ def obtener_artista(
     response_model=ArtistaRespuesta,
     summary="Actualizar un artista",
     description="Modifica solo los campos enviados.",
-    responses={404: {"description": "El artista no existe"},
-               409: {"description": "Correo ya usado por otro artista"}},
+    responses={
+        404: {"description": "El artista no existe"},
+        409: {"description": "Correo ya usado por otro artista"},
+    },
 )
 def actualizar_artista(
     artista_id: int,

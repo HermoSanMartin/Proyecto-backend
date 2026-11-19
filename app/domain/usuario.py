@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
@@ -13,15 +13,25 @@ class RolUsuario(str, Enum):
 def validar_politica_password(password: str) -> None:
     errores: list[dict[str, str]] = []
     if len(password) < 12:
-        errores.append({"campo": "password", "mensaje": "Debe tener al menos 12 caracteres"})
+        errores.append(
+            {"campo": "password", "mensaje": "Debe tener al menos 12 caracteres"}
+        )
     if not any(c.isupper() for c in password):
-        errores.append({"campo": "password", "mensaje": "Debe incluir al menos una mayuscula"})
+        errores.append(
+            {"campo": "password", "mensaje": "Debe incluir al menos una mayuscula"}
+        )
     if not any(c.islower() for c in password):
-        errores.append({"campo": "password", "mensaje": "Debe incluir al menos una minuscula"})
+        errores.append(
+            {"campo": "password", "mensaje": "Debe incluir al menos una minuscula"}
+        )
     if not any(c.isdigit() for c in password):
-        errores.append({"campo": "password", "mensaje": "Debe incluir al menos un numero"})
+        errores.append(
+            {"campo": "password", "mensaje": "Debe incluir al menos un numero"}
+        )
     if errores:
-        raise ReglaDeNegocioViolada("La contrasena no cumple la politica de seguridad", errores)
+        raise ReglaDeNegocioViolada(
+            "La contrasena no cumple la politica de seguridad", errores
+        )
 
 
 @dataclass

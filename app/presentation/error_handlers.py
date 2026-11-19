@@ -3,13 +3,19 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.domain.excepciones import ConflictoDeEstado, ErrorDeDominio, RecursoNoEncontrado
+from app.domain.excepciones import (
+    ConflictoDeEstado,
+    ErrorDeDominio,
+    RecursoNoEncontrado,
+)
 
 
 def _respuesta(estado: int, codigo: str, mensaje: str, detalles: list | None = None):
     return JSONResponse(
         status_code=estado,
-        content={"error": {"code": codigo, "message": mensaje, "details": detalles or []}},
+        content={
+            "error": {"code": codigo, "message": mensaje, "details": detalles or []}
+        },
     )
 
 
@@ -33,7 +39,9 @@ def registrar_manejadores(app: FastAPI) -> None:
             }
             for e in exc.errors()
         ]
-        return _respuesta(422, "VALIDATION_ERROR", "Los datos enviados no son válidos", detalles)
+        return _respuesta(
+            422, "VALIDATION_ERROR", "Los datos enviados no son válidos", detalles
+        )
 
     @app.exception_handler(StarletteHTTPException)
     async def manejar_http(request, exc: StarletteHTTPException):

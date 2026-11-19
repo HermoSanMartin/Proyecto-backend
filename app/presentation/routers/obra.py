@@ -21,10 +21,14 @@ router = APIRouter(prefix="/api/v1/obras", tags=["Obras de arte"])
     status_code=status.HTTP_201_CREATED,
     summary="Registrar una obra de arte",
     description="Crea una obra asociada a un artista existente.",
-    responses={404: {"description": "El artista no existe"},
-               422: {"description": "Datos inválidos"}},
+    responses={
+        404: {"description": "El artista no existe"},
+        422: {"description": "Datos inválidos"},
+    },
 )
-def crear_obra(datos: ObraCrear, servicio: ObraService = Depends(obtener_servicio_obra)):
+def crear_obra(
+    datos: ObraCrear, servicio: ObraService = Depends(obtener_servicio_obra)
+):
     return servicio.crear(ObraDeArte(**datos.model_dump()))
 
 
@@ -36,13 +40,17 @@ def crear_obra(datos: ObraCrear, servicio: ObraService = Depends(obtener_servici
 )
 def listar_obras(
     estilo: str | None = Query(default=None, description="Filtra por estilo exacto"),
-    ordenar_por: Literal["titulo", "precio_estimado", "anio_creacion", "estilo"] = "titulo",
+    ordenar_por: Literal[
+        "titulo", "precio_estimado", "anio_creacion", "estilo"
+    ] = "titulo",
     direccion: Literal["asc", "desc"] = "asc",
     pagina: int = Query(default=1, ge=1),
     limite: int = Query(default=10, ge=1, le=100),
     servicio: ObraService = Depends(obtener_servicio_obra),
 ):
-    obras, total, total_paginas = servicio.listar(estilo, ordenar_por, direccion, pagina, limite)
+    obras, total, total_paginas = servicio.listar(
+        estilo, ordenar_por, direccion, pagina, limite
+    )
     return PaginaObras(
         items=[ObraRespuesta.model_validate(o) for o in obras],
         total=total,

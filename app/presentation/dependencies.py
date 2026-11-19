@@ -30,11 +30,15 @@ def obtener_servicio_obra(db: Session = Depends(obtener_sesion)) -> ObraService:
     return ObraService(ObraRepository(db), ArtistaRepository(db))
 
 
-def obtener_servicio_exposicion(db: Session = Depends(obtener_sesion)) -> ExposicionService:
+def obtener_servicio_exposicion(
+    db: Session = Depends(obtener_sesion),
+) -> ExposicionService:
     return ExposicionService(ExposicionRepository(db))
 
 
-def obtener_servicio_solicitud(db: Session = Depends(obtener_sesion)) -> SolicitudService:
+def obtener_servicio_solicitud(
+    db: Session = Depends(obtener_sesion),
+) -> SolicitudService:
     return SolicitudService(
         SolicitudRepository(db), ObraRepository(db), ExposicionRepository(db)
     )

@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends, status
 from app.application.services.exposicion_service import ExposicionService
 from app.domain.exposicion import Exposicion
 from app.presentation.dependencies import obtener_servicio_exposicion
-from app.presentation.schemas.exposicion_schema import ExposicionCrear, ExposicionRespuesta
+from app.presentation.schemas.exposicion_schema import (
+    ExposicionCrear,
+    ExposicionRespuesta,
+)
 
 router = APIRouter(prefix="/api/v1/exposiciones", tags=["Exposiciones"])
 
@@ -29,7 +32,9 @@ def crear_exposicion(
     summary="Listar exposiciones",
     description="Devuelve todas las exposiciones registradas.",
 )
-def listar_exposiciones(servicio: ExposicionService = Depends(obtener_servicio_exposicion)):
+def listar_exposiciones(
+    servicio: ExposicionService = Depends(obtener_servicio_exposicion),
+):
     return servicio.listar()
 
 

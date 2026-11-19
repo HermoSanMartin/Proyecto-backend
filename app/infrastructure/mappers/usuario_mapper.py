@@ -1,4 +1,4 @@
-﻿from app.domain.usuario import RolUsuario, Usuario
+from app.domain.usuario import RolUsuario, Usuario
 from app.infrastructure.models.usuario_orm import UsuarioORM
 
 

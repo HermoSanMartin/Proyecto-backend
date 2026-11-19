@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from enum import Enum
+
 from app.domain.excepciones import ReglaDeNegocioViolada
 
 
@@ -35,5 +36,7 @@ class SolicitudPrestamo:
 
     def _cambiar_estado(self, nuevo_estado: EstadoSolicitud) -> None:
         if self.estado_solicitud != EstadoSolicitud.PENDIENTE:
-            raise ReglaDeNegocioViolada("Solo se puede resolver una solicitud pendiente")
+            raise ReglaDeNegocioViolada(
+                "Solo se puede resolver una solicitud pendiente"
+            )
         self.estado_solicitud = nuevo_estado

@@ -1,4 +1,4 @@
-﻿from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Configuracion(BaseSettings):
@@ -15,13 +15,17 @@ class Configuracion(BaseSettings):
     smtp_host: str = "localhost"
     smtp_port: int = 1025
     smtp_from: str = "no-responder@galeria-uct.cl"
-    url_recuperacion_base: str = "http://localhost:8000/api/v1/auth/restablecer-password"
+    url_recuperacion_base: str = (
+        "http://localhost:8000/api/v1/auth/restablecer-password"
+    )
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @property
     def lista_cors_origins(self) -> list[str]:
-        return [origen.strip() for origen in self.cors_origins.split(",") if origen.strip()]
+        return [
+            origen.strip() for origen in self.cors_origins.split(",") if origen.strip()
+        ]
 
 
 configuracion = Configuracion()

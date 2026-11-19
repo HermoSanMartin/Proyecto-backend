@@ -5,7 +5,9 @@ from app.domain.solicitud_prestamo import SolicitudPrestamo
 from app.presentation.dependencies import obtener_servicio_solicitud
 from app.presentation.schemas.solicitud_schema import SolicitudCrear, SolicitudRespuesta
 
-router = APIRouter(prefix="/api/v1/solicitudes-prestamo", tags=["Solicitudes de préstamo"])
+router = APIRouter(
+    prefix="/api/v1/solicitudes-prestamo", tags=["Solicitudes de préstamo"]
+)
 
 
 @router.post(
@@ -14,9 +16,11 @@ router = APIRouter(prefix="/api/v1/solicitudes-prestamo", tags=["Solicitudes de 
     status_code=status.HTTP_201_CREATED,
     summary="Solicitar el préstamo de una obra",
     description="Crea una solicitud PENDIENTE. La obra debe existir y estar disponible.",
-    responses={400: {"description": "La obra no está disponible"},
-               404: {"description": "La obra o la exposición no existen"},
-               422: {"description": "Datos inválidos"}},
+    responses={
+        400: {"description": "La obra no está disponible"},
+        404: {"description": "La obra o la exposición no existen"},
+        422: {"description": "Datos inválidos"},
+    },
 )
 def crear_solicitud(
     datos: SolicitudCrear,
@@ -31,7 +35,9 @@ def crear_solicitud(
     summary="Listar solicitudes de préstamo",
     description="Devuelve todas las solicitudes registradas.",
 )
-def listar_solicitudes(servicio: SolicitudService = Depends(obtener_servicio_solicitud)):
+def listar_solicitudes(
+    servicio: SolicitudService = Depends(obtener_servicio_solicitud),
+):
     return servicio.listar()
 
 
@@ -54,8 +60,12 @@ def obtener_solicitud(
     response_model=SolicitudRespuesta,
     summary="Aprobar una solicitud",
     description="Aprueba una solicitud pendiente y marca la obra como prestada.",
-    responses={400: {"description": "Obra no disponible, exposición sin cupo o solicitud ya resuelta"},
-               404: {"description": "La solicitud no existe"}},
+    responses={
+        400: {
+            "description": "Obra no disponible, exposición sin cupo o solicitud ya resuelta"
+        },
+        404: {"description": "La solicitud no existe"},
+    },
 )
 def aprobar_solicitud(
     solicitud_id: int,
@@ -69,8 +79,10 @@ def aprobar_solicitud(
     response_model=SolicitudRespuesta,
     summary="Rechazar una solicitud",
     description="Rechaza una solicitud pendiente.",
-    responses={400: {"description": "La solicitud ya fue resuelta"},
-               404: {"description": "La solicitud no existe"}},
+    responses={
+        400: {"description": "La solicitud ya fue resuelta"},
+        404: {"description": "La solicitud no existe"},
+    },
 )
 def rechazar_solicitud(
     solicitud_id: int,
