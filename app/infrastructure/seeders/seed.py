@@ -1,23 +1,47 @@
-from datetime import date
+﻿from datetime import date
 
 from sqlalchemy import select
 
 from app.domain.exposicion import EstadoExposicion
 from app.domain.solicitud_prestamo import EstadoSolicitud
+from app.domain.usuario import RolUsuario
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import (
     ArtistaORM,
     ExposicionORM,
     ObraDeArteORM,
     SolicitudPrestamoORM,
+    UsuarioORM,
 )
+from app.infrastructure.security.password_hasher import hashear_password
 
 
 def ejecutar() -> None:
     db = SessionLocal()
     try:
+        if db.scalar(select(UsuarioORM).limit(1)) is None:
+            usuarios = [
+                UsuarioORM(
+                    nombre="Curador Administrador",
+                    email="admin@galeria.cl",
+                    password_hash=hashear_password("AdminGaleria2026!"),
+                    rol=RolUsuario.ADMIN.value,
+                    activo=True,
+                ),
+                UsuarioORM(
+                    nombre="Visitante Registrado",
+                    email="visitante@galeria.cl",
+                    password_hash=hashear_password("Visitante2026!"),
+                    rol=RolUsuario.USUARIO.value,
+                    activo=True,
+                ),
+            ]
+            db.add_all(usuarios)
+            db.commit()
+            print("Usuarios de demostracion cargados: admin@galeria.cl y visitante@galeria.cl.")
+
         if db.scalar(select(ArtistaORM).limit(1)) is not None:
-            print("La base ya tiene datos; no se cargó nada.")
+            print("La base ya tiene datos de negocio; no se duplicaron.")
             return
 
         artistas = [

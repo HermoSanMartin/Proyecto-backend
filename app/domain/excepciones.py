@@ -1,4 +1,4 @@
-class ErrorDeDominio(Exception):
+﻿class ErrorDeDominio(Exception):
     codigo = "DOMAIN_ERROR"
 
     def __init__(self, mensaje: str, detalles: list | None = None) -> None:
@@ -17,3 +17,15 @@ class ReglaDeNegocioViolada(ErrorDeDominio):
 
 class ConflictoDeEstado(ErrorDeDominio):
     codigo = "CONFLICT"
+
+
+class NoAutenticado(ErrorDeDominio):
+    codigo = "UNAUTHORIZED"
+
+
+class PermisoDenegado(ErrorDeDominio):
+    codigo = "FORBIDDEN"
+
+
+class CuentaBloqueada(ErrorDeDominio):
+    codigo = "ACCOUNT_LOCKED"
