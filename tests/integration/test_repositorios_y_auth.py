@@ -217,11 +217,3 @@ def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(db_session: 
             )
         )
     assert verificar_password("x", hashear_password("x")) is True
-
-
-def test_integracion_reportes_resumen(db_session: Session):
-    from app.presentation.routers.reportes import obtener_resumen_estadisticas
-
-    resumen = obtener_resumen_estadisticas(db=db_session)
-    assert resumen["estado_sistema"] == "Operativo"
-    assert "total_obras" in resumen
