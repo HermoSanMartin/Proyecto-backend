@@ -222,3 +222,86 @@ def test_e2e_escenario_3_permisos_diferenciados_401_vs_403(
     no_existe = client.get("/api/v1/artistas/999999")
     assert no_existe.status_code == 404
     assert no_existe.json()["error"]["code"] == "RESOURCE_NOT_FOUND"
+
+
+def test_e2e_escenario_4_crud_completo_y_rechazo_solicitud(
+    client: TestClient, admin_creado: UsuarioORM
+):
+    tokens_admin = _login(client, admin_creado.email, "AdminClaveSegura2026!")
+    headers_admin = {"Authorization": f"Bearer {tokens_admin['access_token']}"}
+
+    art = client.post(
+        "/api/v1/artistas",
+        headers=headers_admin,
+        json={
+            "nombre_artistico": "Roberto Matta",
+            "email": "matta@galeria.cl",
+            "nacionalidad": "Chilena",
+            "biografia": "Referente del surrealismo.",
+        },
+    ).json()
+    assert len(client.get("/api/v1/artistas").json()) >= 1
+
+    art_upd = client.patch(
+        f"/api/v1/artistas/{art['id']}",
+        headers=headers_admin,
+        json={"nacionalidad": "Chilena-Francesa"},
+    )
+    assert art_upd.status_code == 200
+    assert art_upd.json()["nacionalidad"] == "Chilena-Francesa"
+
+    obra = client.post(
+        "/api/v1/obras",
+        headers=headers_admin,
+        json={
+            "titulo": "El Vertigo de Eros",
+            "precio_estimado": 15000,
+            "anio_creacion": 1944,
+            "estilo": "Surrealismo",
+            "artista_id": art["id"],
+        },
+    ).json()
+    assert client.get("/api/v1/obras").status_code == 200
+    assert client.get(f"/api/v1/obras/{obra['id']}").status_code == 200
+
+    obra_upd = client.patch(
+        f"/api/v1/obras/{obra['id']}",
+        headers=headers_admin,
+        json={"precio_estimado": 18000},
+    )
+    assert obra_upd.status_code == 200
+    assert obra_upd.json()["precio_estimado"] == 18000
+
+    expo = client.post(
+        "/api/v1/exposiciones",
+        headers=headers_admin,
+        json={
+            "nombre_evento": "Surrealismo Latinoamericano",
+            "lugar": "Museo Nacional",
+            "fecha_inicio": "2026-12-05",
+            "fecha_fin": "2026-12-28",
+        },
+    ).json()
+    assert len(client.get("/api/v1/exposiciones").json()) >= 1
+    assert client.get(f"/api/v1/exposiciones/{expo['id']}").status_code == 200
+
+    sol = client.post(
+        "/api/v1/solicitudes-prestamo",
+        headers=headers_admin,
+        json={"obra_id": obra["id"], "exposicion_id": expo["id"], "dias_prestamo": 7},
+    ).json()
+    assert (
+        client.get(f"/api/v1/solicitudes-prestamo/{sol['id']}", headers=headers_admin).status_code
+        == 200
+    )
+
+    sol_rech = client.patch(
+        f"/api/v1/solicitudes-prestamo/{sol['id']}/rechazar",
+        headers=headers_admin,
+    )
+    assert sol_rech.status_code == 200
+    assert sol_rech.json()["estado_solicitud"] == "RECHAZADO"
+
+    del_resp = client.delete(f"/api/v1/obras/{obra['id']}", headers=headers_admin)
+    assert del_resp.status_code == 204
+    assert client.get(f"/api/v1/obras/{obra['id']}").status_code == 404

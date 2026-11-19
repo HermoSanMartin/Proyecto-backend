@@ -1,9 +1,9 @@
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
-from app.application.services.auth_service import AuthService
 from sqlalchemy.orm import Session
 
+from app.application.services.auth_service import AuthService
 from app.application.services.exposicion_service import ExposicionService
 from app.application.services.obra_service import ObraService
 from app.application.services.solicitud_service import SolicitudService
@@ -114,6 +114,7 @@ def test_integracion_obras_filtro_orden_y_paginacion(db_session: Session):
             nombre_artistico="Vicente Huidobro",
             email="vicente@galeria.cl",
             nacionalidad="Chilena",
+            biografia="Biografia de prueba.",
         )
     )
     serv_obra.crear(
@@ -171,6 +172,7 @@ def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(db_session: 
             nombre_artistico="Violeta Parra",
             email="violeta@galeria.cl",
             nacionalidad="Chilena",
+            biografia="Biografia de prueba.",
         )
     )
     obra = repo_obra.crear(
@@ -215,3 +217,11 @@ def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(db_session: 
             )
         )
     assert verificar_password("x", hashear_password("x")) is True
+
+
+def test_integracion_reportes_resumen(db_session: Session):
+    from app.presentation.routers.reportes import obtener_resumen_estadisticas
+
+    resumen = obtener_resumen_estadisticas(db=db_session)
+    assert resumen["estado_sistema"] == "Operativo"
+    assert "total_obras" in resumen

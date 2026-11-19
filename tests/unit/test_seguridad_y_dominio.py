@@ -3,9 +3,9 @@ from unittest.mock import MagicMock
 
 import jwt
 import pytest
-from app.application.services.auth_service import AuthService
 
 from app.application.services.artista_service import ArtistaService
+from app.application.services.auth_service import AuthService
 from app.application.services.obra_service import ObraService
 from app.domain.artista import Artista
 from app.domain.excepciones import (
@@ -183,6 +183,7 @@ def test_servicios_negocio_validaciones_unitarias():
         nombre_artistico="Existente",
         email="dup@galeria.cl",
         nacionalidad="Chilena",
+        biografia="Biografia de prueba.",
     )
     serv_artista = ArtistaService(repo_artista)
     with pytest.raises(ConflictoDeEstado):
@@ -191,6 +192,7 @@ def test_servicios_negocio_validaciones_unitarias():
                 nombre_artistico="Nuevo",
                 email="dup@galeria.cl",
                 nacionalidad="Chilena",
+                biografia="Biografia de prueba.",
             )
         )
 
