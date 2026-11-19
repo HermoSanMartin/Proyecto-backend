@@ -38,9 +38,7 @@ def ejecutar() -> None:
             ]
             db.add_all(usuarios)
             db.commit()
-            print(
-                "Usuarios de demostracion cargados: admin@galeria.cl y visitante@galeria.cl."
-            )
+            print("Usuarios de demostracion cargados: admin@galeria.cl y visitante@galeria.cl.")
 
         if db.scalar(select(ArtistaORM).limit(1)) is not None:
             print("La base ya tiene datos de negocio; no se duplicaron.")
@@ -154,9 +152,7 @@ def ejecutar() -> None:
         ]
         db.add_all(solicitudes)
         db.commit()
-        print(
-            "Datos de ejemplo cargados: 2 artistas, 6 obras, 2 exposiciones y 2 solicitudes."
-        )
+        print("Datos de ejemplo cargados: 2 artistas, 6 obras, 2 exposiciones y 2 solicitudes.")
     finally:
         db.close()
 

@@ -29,12 +29,8 @@ def obtener_resumen_estadisticas(db: Session = Depends(get_db)):
     Retorna estadisticas generales acumuladas en el sistema.
     """
     total_obras = db.query(models.Obra).count() if hasattr(models, "Obra") else 0
-    total_galerias = (
-        db.query(models.Galeria).count() if hasattr(models, "Galeria") else 0
-    )
-    total_prestamos = (
-        db.query(models.Prestamo).count() if hasattr(models, "Prestamo") else 0
-    )
+    total_galerias = db.query(models.Galeria).count() if hasattr(models, "Galeria") else 0
+    total_prestamos = db.query(models.Prestamo).count() if hasattr(models, "Prestamo") else 0
 
     return {
         "total_obras": total_obras,

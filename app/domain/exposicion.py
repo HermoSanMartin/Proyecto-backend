@@ -24,9 +24,7 @@ class Exposicion:
 
     def __post_init__(self) -> None:
         if self.fecha_fin < self.fecha_inicio:
-            raise ReglaDeNegocioViolada(
-                "La exposición no puede terminar antes de comenzar"
-            )
+            raise ReglaDeNegocioViolada("La exposición no puede terminar antes de comenzar")
 
     def tiene_cupo(self, obras_prestadas: int) -> bool:
         return obras_prestadas < MAX_OBRAS_PRESTADAS

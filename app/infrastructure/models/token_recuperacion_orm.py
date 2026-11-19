@@ -16,6 +16,4 @@ class TokenRecuperacionORM(Base):
     jti: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     expira_en: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     usado: Mapped[bool] = mapped_column(Boolean, default=False)
-    usado_en: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    usado_en: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

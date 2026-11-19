@@ -16,7 +16,5 @@ class UsuarioORM(Base):
     rol: Mapped[str] = mapped_column(String(30), default="usuario")
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
     intentos_fallidos: Mapped[int] = mapped_column(Integer, default=0)
-    bloqueado_hasta: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    bloqueado_hasta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     token_version: Mapped[int] = mapped_column(Integer, default=1)

@@ -5,9 +5,7 @@ from app.domain.solicitud_prestamo import SolicitudPrestamo
 from app.presentation.dependencies import obtener_servicio_solicitud
 from app.presentation.schemas.solicitud_schema import SolicitudCrear, SolicitudRespuesta
 
-router = APIRouter(
-    prefix="/api/v1/solicitudes-prestamo", tags=["Solicitudes de préstamo"]
-)
+router = APIRouter(prefix="/api/v1/solicitudes-prestamo", tags=["Solicitudes de préstamo"])
 
 
 @router.post(
@@ -61,9 +59,7 @@ def obtener_solicitud(
     summary="Aprobar una solicitud",
     description="Aprueba una solicitud pendiente y marca la obra como prestada.",
     responses={
-        400: {
-            "description": "Obra no disponible, exposición sin cupo o solicitud ya resuelta"
-        },
+        400: {"description": "Obra no disponible, exposición sin cupo o solicitud ya resuelta"},
         404: {"description": "La solicitud no existe"},
     },
 )

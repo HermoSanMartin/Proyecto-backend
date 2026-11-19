@@ -26,9 +26,7 @@ class ArtistaService:
         nuevo_email = cambios.get("email")
         if nuevo_email and nuevo_email != artista.email:
             if self.repositorio.obtener_por_email(nuevo_email):
-                raise ConflictoDeEstado(
-                    "Ya existe un artista con ese correo electrónico"
-                )
+                raise ConflictoDeEstado("Ya existe un artista con ese correo electrónico")
         for campo, valor in cambios.items():
             setattr(artista, campo, valor)
         return self.repositorio.actualizar(artista)
