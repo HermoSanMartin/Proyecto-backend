@@ -17,3 +17,15 @@ class ReglaDeNegocioViolada(ErrorDeDominio):
 
 class ConflictoDeEstado(ErrorDeDominio):
     codigo = "CONFLICT"
+
+
+class NoAutenticado(ErrorDeDominio):
+    codigo = "UNAUTHORIZED"
+
+
+class PermisoDenegado(ErrorDeDominio):
+    codigo = "FORBIDDEN"
+
+
+class CuentaBloqueada(ErrorDeDominio):
+    codigo = "ACCOUNT_LOCKED"

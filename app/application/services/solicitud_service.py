@@ -50,9 +50,7 @@ class SolicitudService:
         # Regla 2: máximo 5 obras prestadas por exposición
         prestadas = self.repo_solicitudes.contar_aprobadas(solicitud.exposicion_id)
         if not exposicion.tiene_cupo(prestadas):
-            raise ReglaDeNegocioViolada(
-                "La exposición ya alcanzó el máximo de 5 obras prestadas"
-            )
+            raise ReglaDeNegocioViolada("La exposición ya alcanzó el máximo de 5 obras prestadas")
 
         obra.marcar_como_prestada()
         self.repo_obras.actualizar(obra)

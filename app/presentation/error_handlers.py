@@ -3,7 +3,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.domain.excepciones import ConflictoDeEstado, ErrorDeDominio, RecursoNoEncontrado
+from app.domain.excepciones import (
+    ConflictoDeEstado,
+    CuentaBloqueada,
+    ErrorDeDominio,
+    NoAutenticado,
+    PermisoDenegado,
+    RecursoNoEncontrado,
+)
 
 
 def _respuesta(estado: int, codigo: str, mensaje: str, detalles: list | None = None):
@@ -16,10 +23,16 @@ def _respuesta(estado: int, codigo: str, mensaje: str, detalles: list | None = N
 def registrar_manejadores(app: FastAPI) -> None:
     @app.exception_handler(ErrorDeDominio)
     async def manejar_error_de_dominio(request, exc: ErrorDeDominio):
-        if isinstance(exc, RecursoNoEncontrado):
+        if isinstance(exc, NoAutenticado):
+            estado = 401
+        elif isinstance(exc, PermisoDenegado):
+            estado = 403
+        elif isinstance(exc, RecursoNoEncontrado):
             estado = 404
         elif isinstance(exc, ConflictoDeEstado):
             estado = 409
+        elif isinstance(exc, CuentaBloqueada):
+            estado = 429
         else:
             estado = 400
         return _respuesta(estado, exc.codigo, exc.mensaje, exc.detalles)
@@ -33,7 +46,7 @@ def registrar_manejadores(app: FastAPI) -> None:
             }
             for e in exc.errors()
         ]
-        return _respuesta(422, "VALIDATION_ERROR", "Los datos enviados no son válidos", detalles)
+        return _respuesta(422, "VALIDATION_ERROR", "Los datos enviados no son validos", detalles)
 
     @app.exception_handler(StarletteHTTPException)
     async def manejar_http(request, exc: StarletteHTTPException):
@@ -41,4 +54,4 @@ def registrar_manejadores(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def manejar_inesperado(request, exc: Exception):
-        return _respuesta(500, "INTERNAL_ERROR", "Ocurrió un error interno")
+        return _respuesta(500, "INTERNAL_ERROR", "Ocurrio un error interno")

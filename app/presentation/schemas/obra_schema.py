@@ -33,6 +33,7 @@ class ObraRespuesta(BaseModel):
     disponible: bool
     artista_id: int
 
+
 class PaginaObras(BaseModel):
     items: list[ObraRespuesta]
     total: int

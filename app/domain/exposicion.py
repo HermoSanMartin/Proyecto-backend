@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 from enum import Enum
+
 from app.domain.excepciones import ReglaDeNegocioViolada
 
 MAX_OBRAS_PRESTADAS = 5

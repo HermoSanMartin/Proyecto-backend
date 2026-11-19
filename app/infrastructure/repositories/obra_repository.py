@@ -42,14 +42,10 @@ class ObraRepository:
         if estilo:
             consulta = consulta.where(ObraDeArteORM.estilo == estilo)
 
-        total = self.db.scalar(
-            select(func.count()).select_from(consulta.subquery())
-        ) or 0
+        total = self.db.scalar(select(func.count()).select_from(consulta.subquery())) or 0
 
         columna = COLUMNAS_ORDENABLES[ordenar_por]
-        consulta = consulta.order_by(
-            columna.desc() if direccion == "desc" else columna.asc()
-        )
+        consulta = consulta.order_by(columna.desc() if direccion == "desc" else columna.asc())
         consulta = consulta.offset((pagina - 1) * limite).limit(limite)
 
         obras = [orm_a_dominio(o) for o in self.db.scalars(consulta).all()]

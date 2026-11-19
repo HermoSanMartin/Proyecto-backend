@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, status
 
 from app.application.services.artista_service import ArtistaService
 from app.domain.artista import Artista
-from app.presentation.dependencies import obtener_servicio_artista
+from app.domain.usuario import Usuario
+from app.presentation.dependencies import exigir_admin, obtener_servicio_artista
 from app.presentation.schemas.artista_schema import (
     ArtistaActualizar,
     ArtistaCrear,
@@ -16,14 +17,19 @@ router = APIRouter(prefix="/api/v1/artistas", tags=["Artistas"])
     "",
     response_model=ArtistaRespuesta,
     status_code=status.HTTP_201_CREATED,
-    summary="Registrar un artista",
-    description="Crea un artista nuevo. El correo electrónico debe ser único.",
-    responses={409: {"description": "Ya existe un artista con ese correo"},
-               422: {"description": "Datos inválidos"}},
+    summary="Registrar un artista (Solo Admin)",
+    description="Crea un artista nuevo. Requiere rol administrador.",
+    responses={
+        401: {"description": "No autenticado"},
+        403: {"description": "Permisos insuficientes"},
+        409: {"description": "Ya existe un artista con ese correo"},
+        422: {"description": "Datos invalidos"},
+    },
 )
 def crear_artista(
     datos: ArtistaCrear,
     servicio: ArtistaService = Depends(obtener_servicio_artista),
+    _admin: Usuario = Depends(exigir_admin),
 ):
     return servicio.crear(Artista(**datos.model_dump()))
 
@@ -55,14 +61,19 @@ def obtener_artista(
 @router.patch(
     "/{artista_id}",
     response_model=ArtistaRespuesta,
-    summary="Actualizar un artista",
-    description="Modifica solo los campos enviados.",
-    responses={404: {"description": "El artista no existe"},
-               409: {"description": "Correo ya usado por otro artista"}},
+    summary="Actualizar un artista (Solo Admin)",
+    description="Modifica solo los campos enviados. Requiere rol administrador.",
+    responses={
+        401: {"description": "No autenticado"},
+        403: {"description": "Permisos insuficientes"},
+        404: {"description": "El artista no existe"},
+        409: {"description": "Correo ya usado por otro artista"},
+    },
 )
 def actualizar_artista(
     artista_id: int,
     datos: ArtistaActualizar,
     servicio: ArtistaService = Depends(obtener_servicio_artista),
+    _admin: Usuario = Depends(exigir_admin),
 ):
     return servicio.actualizar(artista_id, datos.model_dump(exclude_unset=True))

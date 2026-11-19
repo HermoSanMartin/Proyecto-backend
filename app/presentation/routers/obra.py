@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.application.services.obra_service import ObraService
 from app.domain.obra_de_arte import ObraDeArte
-from app.presentation.dependencies import obtener_servicio_obra
+from app.domain.usuario import Usuario
+from app.presentation.dependencies import exigir_admin, obtener_servicio_obra
 from app.presentation.schemas.obra_schema import (
     ObraActualizar,
     ObraCrear,
@@ -19,19 +20,27 @@ router = APIRouter(prefix="/api/v1/obras", tags=["Obras de arte"])
     "",
     response_model=ObraRespuesta,
     status_code=status.HTTP_201_CREATED,
-    summary="Registrar una obra de arte",
-    description="Crea una obra asociada a un artista existente.",
-    responses={404: {"description": "El artista no existe"},
-               422: {"description": "Datos inválidos"}},
+    summary="Registrar una obra de arte (Solo Admin)",
+    description="Crea una obra asociada a un artista existente. Requiere rol administrador.",
+    responses={
+        401: {"description": "No autenticado"},
+        403: {"description": "Permisos insuficientes"},
+        404: {"description": "El artista no existe"},
+        422: {"description": "Datos invalidos"},
+    },
 )
-def crear_obra(datos: ObraCrear, servicio: ObraService = Depends(obtener_servicio_obra)):
+def crear_obra(
+    datos: ObraCrear,
+    servicio: ObraService = Depends(obtener_servicio_obra),
+    _admin: Usuario = Depends(exigir_admin),
+):
     return servicio.crear(ObraDeArte(**datos.model_dump()))
 
 
 @router.get(
     "",
     response_model=PaginaObras,
-    summary="Listar obras con filtro, orden y paginación",
+    summary="Listar obras con filtro, orden y paginacion",
     description="Primero filtra por estilo, luego ordena y finalmente pagina.",
 )
 def listar_obras(
@@ -66,14 +75,19 @@ def obtener_obra(obra_id: int, servicio: ObraService = Depends(obtener_servicio_
 @router.patch(
     "/{obra_id}",
     response_model=ObraRespuesta,
-    summary="Actualizar una obra",
-    description="Modifica solo los campos enviados.",
-    responses={404: {"description": "La obra no existe"}},
+    summary="Actualizar una obra (Solo Admin)",
+    description="Modifica solo los campos enviados. Requiere rol administrador.",
+    responses={
+        401: {"description": "No autenticado"},
+        403: {"description": "Permisos insuficientes"},
+        404: {"description": "La obra no existe"},
+    },
 )
 def actualizar_obra(
     obra_id: int,
     datos: ObraActualizar,
     servicio: ObraService = Depends(obtener_servicio_obra),
+    _admin: Usuario = Depends(exigir_admin),
 ):
     return servicio.actualizar(obra_id, datos.model_dump(exclude_unset=True))
 
@@ -81,10 +95,18 @@ def actualizar_obra(
 @router.delete(
     "/{obra_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Eliminar una obra",
-    description="Elimina la obra de forma permanente.",
-    responses={404: {"description": "La obra no existe"}},
+    summary="Eliminar una obra (Solo Admin)",
+    description="Elimina la obra de forma permanente. Requiere rol administrador.",
+    responses={
+        401: {"description": "No autenticado"},
+        403: {"description": "Permisos insuficientes"},
+        404: {"description": "La obra no existe"},
+    },
 )
-def eliminar_obra(obra_id: int, servicio: ObraService = Depends(obtener_servicio_obra)):
+def eliminar_obra(
+    obra_id: int,
+    servicio: ObraService = Depends(obtener_servicio_obra),
+    _admin: Usuario = Depends(exigir_admin),
+):
     servicio.eliminar(obra_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
