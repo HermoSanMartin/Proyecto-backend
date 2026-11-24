@@ -251,3 +251,18 @@ def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(
             )
         )
     assert verificar_password("x", hashear_password("x")) is True
+
+
+def test_recuperacion_admite_nuevo_envio_tras_la_espera(db_session: Session):
+    from app.infrastructure.models import UsuarioORM
+
+    correo = CapturadorCorreoFalso()
+    servicio = AuthService(UsuarioRepository(db_session), correo)
+    usuario = servicio.registrar("Cuenta Demo", "demo.espera@example.com", "ClaveSegura2026!")
+    assert servicio.solicitar_recuperacion(usuario.email)
+    assert servicio.solicitar_recuperacion(usuario.email) is None
+    cuenta = db_session.get(UsuarioORM, usuario.id)
+    cuenta.proxima_recuperacion = datetime.now(UTC) - timedelta(seconds=1)
+    db_session.commit()
+    assert servicio.solicitar_recuperacion(usuario.email)
+    assert len(correo.enviados) == 2

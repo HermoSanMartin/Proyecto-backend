@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 from sqlalchemy.orm import Session
 
 from app.domain.usuario import Usuario
@@ -119,7 +119,23 @@ class UsuarioRepository:
     # --- Gestion de Tokens de Recuperacion (uso unico) ---
     def guardar_token_recuperacion(
         self, usuario_id: int, jti: str, expira_en: datetime
-    ) -> TokenRecuperacionORM:
+    ) -> TokenRecuperacionORM | None:
+        ahora = datetime.now(UTC)
+        reserva = self.db.execute(
+            update(UsuarioORM)
+            .where(
+                UsuarioORM.id == usuario_id,
+                or_(
+                    UsuarioORM.proxima_recuperacion.is_(None),
+                    UsuarioORM.proxima_recuperacion <= ahora,
+                ),
+            )
+            .values(proxima_recuperacion=ahora + timedelta(minutes=1))
+            .execution_options(synchronize_session=False)
+        )
+        if reserva.rowcount != 1:
+            self.db.rollback()
+            return None
         registro = TokenRecuperacionORM(
             usuario_id=usuario_id,
             jti=jti,

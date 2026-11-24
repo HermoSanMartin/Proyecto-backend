@@ -132,6 +132,10 @@ def test_e2e_escenario_2_recuperacion_uso_unico_e_invalidacion_sesiones(
         json={"email": destinatario},
     )
     assert rec_ok.status_code == 200
+    repetida = client.post("/api/v1/auth/solicitar-recuperacion", json={"email": destinatario})
+    assert repetida.status_code == 200
+    assert repetida.json() == rec_ok.json() == rec_inexistente.json()
+    _login(client, destinatario, "SofiaClaveOriginal2026!")
     busqueda = mailpit.get("/api/v1/search", params={"query": f"to:{destinatario}"})
     busqueda.raise_for_status()
     mensajes = busqueda.json()["messages"]

@@ -54,6 +54,8 @@ Importa [la colección de Postman](tests_manual/Galeria.postman_collection.json)
 
 El JWT de acceso caduca por defecto a los 15 minutos. El refresh es opaco, se guarda como hash y rota al renovar. La reutilización revoca la familia. Logout revoca la renovación y el access ya emitido puede durar hasta su expiración. Para recuperación, el backend envía un JWT de propósito exclusivo por correo. Restablecer la contraseña consume el permiso e invalida sesiones previas.
 
+La API admite un correo de recuperación por cuenta cada 60 segundos. Repetir la solicitud devuelve la misma respuesta genérica y permite seguir iniciando sesión.
+
 Los [diagramas de arquitectura y datos](docs/diagramas.md) siguen la creación de un artista hasta PostgreSQL. La [matriz de retroalimentación](docs/retroalimentacion.md) identifica las pruebas que respaldan los requisitos de continuidad.
 
 ## Preparar el entorno de pruebas en Windows

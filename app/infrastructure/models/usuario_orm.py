@@ -18,3 +18,6 @@ class UsuarioORM(Base):
     intentos_fallidos: Mapped[int] = mapped_column(Integer, default=0)
     bloqueado_hasta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     token_version: Mapped[int] = mapped_column(Integer, default=1)
+    proxima_recuperacion: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
