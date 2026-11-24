@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field
 
 from app.domain.usuario import RolUsuario
+from app.presentation.schemas.respuesta import ApiResponse
 
 
 class UsuarioRegistroEntrada(BaseModel):
@@ -14,9 +15,7 @@ class UsuarioLoginEntrada(BaseModel):
     password: str = Field(..., min_length=1, max_length=128)
 
 
-class UsuarioRespuesta(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class UsuarioRespuesta(ApiResponse):
     id: int
     nombre: str
     email: EmailStr
@@ -24,7 +23,7 @@ class UsuarioRespuesta(BaseModel):
     activo: bool
 
 
-class TokenRespuesta(BaseModel):
+class TokenRespuesta(ApiResponse):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -45,5 +44,5 @@ class RestablecerPasswordEntrada(BaseModel):
     nueva_password: str = Field(..., min_length=12, max_length=128)
 
 
-class MensajeOperacionRespuesta(BaseModel):
+class MensajeOperacionRespuesta(ApiResponse):
     mensaje: str

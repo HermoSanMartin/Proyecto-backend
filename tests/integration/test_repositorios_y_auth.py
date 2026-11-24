@@ -2,6 +2,8 @@ import re
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.application.services.auth_service import AuthService
@@ -168,7 +170,10 @@ def test_integracion_obras_filtro_orden_y_paginacion(db_session: Session):
     assert items[0].titulo == "Altazor"
 
 
-def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(db_session: Session):
+@pytest.mark.parametrize("fallo_segunda_escritura", [False, True], ids=["aprobar", "rollback"])
+def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(
+    db_session: Session, fallo_segunda_escritura: bool
+):
     repo_artista = ArtistaRepository(db_session)
     repo_obra = ObraRepository(db_session)
     repo_expo = ExposicionRepository(db_session)
@@ -213,6 +218,25 @@ def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(db_session: 
         )
     )
     assert sol.estado_solicitud == EstadoSolicitud.PENDIENTE
+
+    if fallo_segunda_escritura:
+        db_session.execute(
+            text(
+                "CREATE TRIGGER fallo_aprobacion BEFORE UPDATE ON solicitudes_prestamo "
+                "BEGIN SELECT RAISE(ABORT, 'fallo de prueba'); END"
+            )
+        )
+        db_session.commit()
+        with pytest.raises(IntegrityError, match="fallo de prueba"):
+            serv_sol.aprobar(sol.id)
+        with Session(db_session.get_bind()) as verificacion:
+            assert ObraRepository(verificacion).obtener_por_id(obra.id).disponible
+            assert (
+                SolicitudRepository(verificacion).obtener_por_id(sol.id).estado_solicitud
+                == EstadoSolicitud.PENDIENTE
+            )
+        db_session.execute(text("DROP TRIGGER fallo_aprobacion"))
+        db_session.commit()
 
     aprobada = serv_sol.aprobar(sol.id)
     assert aprobada.estado_solicitud == EstadoSolicitud.APROBADO

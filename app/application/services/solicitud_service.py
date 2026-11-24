@@ -27,8 +27,8 @@ class SolicitudService:
             raise ReglaDeNegocioViolada("La obra no está disponible para préstamo")
         return self.repo_solicitudes.crear(solicitud)
 
-    def obtener(self, solicitud_id: int) -> SolicitudPrestamo:
-        solicitud = self.repo_solicitudes.obtener_por_id(solicitud_id)
+    def obtener(self, solicitud_id: int, *, bloquear: bool = False) -> SolicitudPrestamo:
+        solicitud = self.repo_solicitudes.obtener_por_id(solicitud_id, bloquear=bloquear)
         if solicitud is None:
             raise RecursoNoEncontrado("No existe una solicitud con el ID solicitado")
         return solicitud
@@ -37,11 +37,11 @@ class SolicitudService:
         return self.repo_solicitudes.listar()
 
     def aprobar(self, solicitud_id: int) -> SolicitudPrestamo:
-        solicitud = self.obtener(solicitud_id)
+        solicitud = self.obtener(solicitud_id, bloquear=True)
         solicitud.aprobar()  # falla si la solicitud no está pendiente
 
-        obra = self.repo_obras.obtener_por_id(solicitud.obra_id)
-        exposicion = self.repo_exposiciones.obtener_por_id(solicitud.exposicion_id)
+        obra = self.repo_obras.obtener_por_id(solicitud.obra_id, bloquear=True)
+        exposicion = self.repo_exposiciones.obtener_por_id(solicitud.exposicion_id, bloquear=True)
 
         # Regla 1: la obra pudo haberse prestado a otra exposición mientras tanto
         if not obra.puede_prestarse():
@@ -53,10 +53,9 @@ class SolicitudService:
             raise ReglaDeNegocioViolada("La exposición ya alcanzó el máximo de 5 obras prestadas")
 
         obra.marcar_como_prestada()
-        self.repo_obras.actualizar(obra)
-        return self.repo_solicitudes.actualizar(solicitud)
+        return self.repo_solicitudes.guardar_aprobacion(solicitud, obra.disponible)
 
     def rechazar(self, solicitud_id: int) -> SolicitudPrestamo:
-        solicitud = self.obtener(solicitud_id)
+        solicitud = self.obtener(solicitud_id, bloquear=True)
         solicitud.rechazar()
         return self.repo_solicitudes.actualizar(solicitud)

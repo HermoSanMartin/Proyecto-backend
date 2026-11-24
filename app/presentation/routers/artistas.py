@@ -9,6 +9,7 @@ from app.presentation.schemas.artista_schema import (
     ArtistaCrear,
     ArtistaRespuesta,
 )
+from app.presentation.schemas.respuesta import RespuestaError
 
 router = APIRouter(prefix="/api/v1/artistas", tags=["Artistas"])
 
@@ -20,10 +21,10 @@ router = APIRouter(prefix="/api/v1/artistas", tags=["Artistas"])
     summary="Registrar un artista (Solo Admin)",
     description="Crea un artista nuevo. Requiere rol administrador.",
     responses={
-        401: {"description": "No autenticado"},
-        403: {"description": "Permisos insuficientes"},
-        409: {"description": "Ya existe un artista con ese correo"},
-        422: {"description": "Datos invalidos"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        403: {"model": RespuestaError, "description": "Permisos insuficientes"},
+        409: {"model": RespuestaError, "description": "Ya existe un artista con ese correo"},
+        422: {"model": RespuestaError, "description": "Datos invalidos"},
     },
 )
 def crear_artista(
@@ -49,7 +50,7 @@ def listar_artistas(servicio: ArtistaService = Depends(obtener_servicio_artista)
     response_model=ArtistaRespuesta,
     summary="Obtener un artista por ID",
     description="Devuelve los datos de un artista.",
-    responses={404: {"description": "El artista no existe"}},
+    responses={404: {"model": RespuestaError, "description": "El artista no existe"}},
 )
 def obtener_artista(
     artista_id: int,
@@ -64,10 +65,10 @@ def obtener_artista(
     summary="Actualizar un artista (Solo Admin)",
     description="Modifica solo los campos enviados. Requiere rol administrador.",
     responses={
-        401: {"description": "No autenticado"},
-        403: {"description": "Permisos insuficientes"},
-        404: {"description": "El artista no existe"},
-        409: {"description": "Correo ya usado por otro artista"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        403: {"model": RespuestaError, "description": "Permisos insuficientes"},
+        404: {"model": RespuestaError, "description": "El artista no existe"},
+        409: {"model": RespuestaError, "description": "Correo ya usado por otro artista"},
     },
 )
 def actualizar_artista(

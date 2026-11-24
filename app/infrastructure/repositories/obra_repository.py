@@ -26,8 +26,10 @@ class ObraRepository:
         self.db.refresh(orm)
         return orm_a_dominio(orm)
 
-    def obtener_por_id(self, obra_id: int) -> ObraDeArte | None:
-        orm = self.db.get(ObraDeArteORM, obra_id)
+    def obtener_por_id(self, obra_id: int, *, bloquear: bool = False) -> ObraDeArte | None:
+        orm = self.db.get(
+            ObraDeArteORM, obra_id, with_for_update=bloquear or None, populate_existing=bloquear
+        )
         return orm_a_dominio(orm) if orm else None
 
     def listar(

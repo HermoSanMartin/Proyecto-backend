@@ -8,6 +8,7 @@ from app.presentation.dependencies import (
     obtener_servicio_solicitud,
     obtener_usuario_actual,
 )
+from app.presentation.schemas.respuesta import RespuestaError
 from app.presentation.schemas.solicitud_schema import SolicitudCrear, SolicitudRespuesta
 
 router = APIRouter(prefix="/api/v1/solicitudes-prestamo", tags=["Solicitudes de prestamo"])
@@ -20,10 +21,10 @@ router = APIRouter(prefix="/api/v1/solicitudes-prestamo", tags=["Solicitudes de 
     summary="Solicitar el prestamo de una obra (Usuario autenticado)",
     description="Crea una solicitud PENDIENTE. Requiere sesion iniciada.",
     responses={
-        400: {"description": "La obra no esta disponible"},
-        401: {"description": "No autenticado"},
-        404: {"description": "La obra o la exposicion no existen"},
-        422: {"description": "Datos invalidos"},
+        400: {"model": RespuestaError, "description": "La obra no esta disponible"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        404: {"model": RespuestaError, "description": "La obra o la exposicion no existen"},
+        422: {"model": RespuestaError, "description": "Datos invalidos"},
     },
 )
 def crear_solicitud(
@@ -39,7 +40,7 @@ def crear_solicitud(
     response_model=list[SolicitudRespuesta],
     summary="Listar solicitudes de prestamo (Usuario autenticado)",
     description="Devuelve todas las solicitudes registradas.",
-    responses={401: {"description": "No autenticado"}},
+    responses={401: {"model": RespuestaError, "description": "No autenticado"}},
 )
 def listar_solicitudes(
     servicio: SolicitudService = Depends(obtener_servicio_solicitud),
@@ -54,8 +55,8 @@ def listar_solicitudes(
     summary="Obtener una solicitud por ID (Usuario autenticado)",
     description="Devuelve los datos de una solicitud.",
     responses={
-        401: {"description": "No autenticado"},
-        404: {"description": "La solicitud no existe"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        404: {"model": RespuestaError, "description": "La solicitud no existe"},
     },
 )
 def obtener_solicitud(
@@ -72,10 +73,13 @@ def obtener_solicitud(
     summary="Aprobar una solicitud (Solo Admin)",
     description="Aprueba una solicitud pendiente y marca la obra como prestada.",
     responses={
-        400: {"description": "Obra no disponible, exposicion sin cupo o solicitud ya resuelta"},
-        401: {"description": "No autenticado"},
-        403: {"description": "Permisos insuficientes"},
-        404: {"description": "La solicitud no existe"},
+        400: {
+            "model": RespuestaError,
+            "description": "Obra no disponible, exposicion sin cupo o solicitud ya resuelta",
+        },
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        403: {"model": RespuestaError, "description": "Permisos insuficientes"},
+        404: {"model": RespuestaError, "description": "La solicitud no existe"},
     },
 )
 def aprobar_solicitud(
@@ -92,10 +96,10 @@ def aprobar_solicitud(
     summary="Rechazar una solicitud (Solo Admin)",
     description="Rechaza una solicitud pendiente.",
     responses={
-        400: {"description": "La solicitud ya fue resuelta"},
-        401: {"description": "No autenticado"},
-        403: {"description": "Permisos insuficientes"},
-        404: {"description": "La solicitud no existe"},
+        400: {"model": RespuestaError, "description": "La solicitud ya fue resuelta"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        403: {"model": RespuestaError, "description": "Permisos insuficientes"},
+        404: {"model": RespuestaError, "description": "La solicitud no existe"},
     },
 )
 def rechazar_solicitud(

@@ -316,3 +316,17 @@ def test_e2e_escenario_4_crud_completo_y_rechazo_solicitud(
     del_resp = client.delete(f"/api/v1/obras/{obra['id']}", headers=headers_admin)
     assert del_resp.status_code == 204
     assert client.get(f"/api/v1/obras/{obra['id']}").status_code == 404
+
+
+def test_contrato_error_validacion_y_openapi(client: Client):
+    respuesta = client.post("/api/v1/auth/login", json={})
+    assert respuesta.status_code == 422
+    error = respuesta.json()["error"]
+    assert error["code"] == "VALIDATION_ERROR"
+    assert {detalle["campo"] for detalle in error["details"]} == {"email", "password"}
+
+    contrato = client.get("/openapi.json").json()
+    respuestas = contrato["paths"]["/api/v1/auth/login"]["post"]["responses"]
+    for estado in ("401", "422"):
+        esquema = respuestas[estado]["content"]["application/json"]["schema"]
+        assert esquema["$ref"] == "#/components/schemas/RespuestaError"
