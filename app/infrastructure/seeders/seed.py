@@ -4,7 +4,8 @@ from sqlalchemy import select
 
 from app.domain.exposicion import EstadoExposicion
 from app.domain.solicitud_prestamo import EstadoSolicitud
-from app.domain.usuario import RolUsuario
+from app.domain.usuario import RolUsuario, validar_politica_password
+from app.infrastructure.config import configuracion
 from app.infrastructure.database import SessionLocal
 from app.infrastructure.models import (
     ArtistaORM,
@@ -19,26 +20,35 @@ from app.infrastructure.security.password_hasher import hashear_password
 def ejecutar() -> None:
     db = SessionLocal()
     try:
-        if db.scalar(select(UsuarioORM).limit(1)) is None:
-            usuarios = [
+        cuentas_demo = [
+            (
+                "Curador Administrador",
+                "admin@galeria.cl",
+                RolUsuario.ADMIN,
+                configuracion.demo_admin_password,
+            ),
+            (
+                "Visitante Registrado",
+                "visitante@galeria.cl",
+                RolUsuario.USUARIO,
+                configuracion.demo_visitante_password,
+            ),
+        ]
+        for nombre, email, rol, secreto in cuentas_demo:
+            if not secreto or db.scalar(select(UsuarioORM.id).where(UsuarioORM.email == email)):
+                continue
+            password = secreto.get_secret_value()
+            validar_politica_password(password)
+            db.add(
                 UsuarioORM(
-                    nombre="Curador Administrador",
-                    email="admin@galeria.cl",
-                    password_hash=hashear_password("AdminGaleria2026!"),
-                    rol=RolUsuario.ADMIN.value,
+                    nombre=nombre,
+                    email=email,
+                    rol=rol.value,
+                    password_hash=hashear_password(password),
                     activo=True,
-                ),
-                UsuarioORM(
-                    nombre="Visitante Registrado",
-                    email="visitante@galeria.cl",
-                    password_hash=hashear_password("Visitante2026!"),
-                    rol=RolUsuario.USUARIO.value,
-                    activo=True,
-                ),
-            ]
-            db.add_all(usuarios)
-            db.commit()
-            print("Usuarios de demostracion cargados: admin@galeria.cl y visitante@galeria.cl.")
+                )
+            )
+        db.commit()
 
         if db.scalar(select(ArtistaORM).limit(1)) is not None:
             print("La base ya tiene datos de negocio; no se duplicaron.")
