@@ -1,17 +1,19 @@
-from fastapi.testclient import TestClient
+import re
+from uuid import uuid4
+
+from httpx import Client
 
 from app.infrastructure.models import UsuarioORM
-from tests.conftest import CapturadorCorreoFalso
 
 
-def _login(client: TestClient, email: str, password: str) -> dict:
+def _login(client: Client, email: str, password: str) -> dict:
     resp = client.post("/api/v1/auth/login", json={"email": email, "password": password})
     assert resp.status_code == 200
     return resp.json()
 
 
 def test_e2e_escenario_1_acceso_negocio_logout_y_refresh_rechazado(
-    client: TestClient, admin_creado: UsuarioORM
+    client: Client, admin_creado: UsuarioORM
 ):
     salud = client.get("/api/v1/salud")
     assert salud.status_code == 200
@@ -105,17 +107,18 @@ def test_e2e_escenario_1_acceso_negocio_logout_y_refresh_rechazado(
 
 
 def test_e2e_escenario_2_recuperacion_uso_unico_e_invalidacion_sesiones(
-    client: TestClient, capturador_correo: CapturadorCorreoFalso
+    client: Client, mailpit: Client
 ):
+    destinatario = f"sofia-{uuid4().hex}@example.com"
     client.post(
         "/api/v1/auth/registro",
         json={
             "nombre": "Sofia Vera",
-            "email": "sofia@galeria.cl",
+            "email": destinatario,
             "password": "SofiaClaveOriginal2026!",
         },
     )
-    sesion_previa = _login(client, "sofia@galeria.cl", "SofiaClaveOriginal2026!")
+    sesion_previa = _login(client, destinatario, "SofiaClaveOriginal2026!")
     headers_previos = {"Authorization": f"Bearer {sesion_previa['access_token']}"}
 
     rec_inexistente = client.post(
@@ -126,12 +129,20 @@ def test_e2e_escenario_2_recuperacion_uso_unico_e_invalidacion_sesiones(
 
     rec_ok = client.post(
         "/api/v1/auth/solicitar-recuperacion",
-        json={"email": "sofia@galeria.cl"},
+        json={"email": destinatario},
     )
     assert rec_ok.status_code == 200
-    assert len(capturador_correo.enviados) == 1
-    token_recuperacion = capturador_correo.enviados[0]["token"]
-    assert token_recuperacion
+    busqueda = mailpit.get("/api/v1/search", params={"query": f"to:{destinatario}"})
+    busqueda.raise_for_status()
+    mensajes = busqueda.json()["messages"]
+    assert len(mensajes) == 1
+    mensaje = mailpit.get(f"/api/v1/message/{mensajes[0]['ID']}")
+    mensaje.raise_for_status()
+    contenido = mensaje.json()
+    assert contenido["To"][0]["Address"] == destinatario
+    enlace = re.search(r"token=([\w.-]+)", contenido["Text"])
+    assert enlace is not None
+    token_recuperacion = enlace.group(1)
 
     reset_invalido = client.post(
         "/api/v1/auth/restablecer-password",
@@ -171,16 +182,16 @@ def test_e2e_escenario_2_recuperacion_uso_unico_e_invalidacion_sesiones(
 
     login_vieja = client.post(
         "/api/v1/auth/login",
-        json={"email": "sofia@galeria.cl", "password": "SofiaClaveOriginal2026!"},
+        json={"email": destinatario, "password": "SofiaClaveOriginal2026!"},
     )
     assert login_vieja.status_code == 401
 
-    login_nueva = _login(client, "sofia@galeria.cl", "SofiaNuevaClave2026!")
-    assert login_nueva["usuario"]["email"] == "sofia@galeria.cl"
+    login_nueva = _login(client, destinatario, "SofiaNuevaClave2026!")
+    assert login_nueva["usuario"]["email"] == destinatario
 
 
 def test_e2e_escenario_3_permisos_diferenciados_401_vs_403(
-    client: TestClient, admin_creado: UsuarioORM
+    client: Client, admin_creado: UsuarioORM
 ):
     payload_artista = {
         "nombre_artistico": "Matilde Perez",
@@ -225,7 +236,7 @@ def test_e2e_escenario_3_permisos_diferenciados_401_vs_403(
 
 
 def test_e2e_escenario_4_crud_completo_y_rechazo_solicitud(
-    client: TestClient, admin_creado: UsuarioORM
+    client: Client, admin_creado: UsuarioORM
 ):
     tokens_admin = _login(client, admin_creado.email, "AdminClaveSegura2026!")
     headers_admin = {"Authorization": f"Bearer {tokens_admin['access_token']}"}

@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
@@ -19,7 +20,16 @@ from app.infrastructure.repositories.solicitud_repository import SolicitudReposi
 from app.infrastructure.repositories.usuario_repository import UsuarioRepository
 from app.infrastructure.security.jwt_manager import crear_recovery_token
 from app.infrastructure.security.password_hasher import hashear_password, verificar_password
-from tests.conftest import CapturadorCorreoFalso
+
+
+class CapturadorCorreoFalso:
+    def __init__(self) -> None:
+        self.enviados: list[dict[str, str]] = []
+
+    def enviar_recuperacion(self, destinatario: str, enlace: str) -> None:
+        match = re.search(r"token=([^&\s]+)", enlace)
+        token = match.group(1) if match else ""
+        self.enviados.append({"destinatario": destinatario, "enlace": enlace, "token": token})
 
 
 def test_integracion_usuario_repository_y_unicidad(db_session: Session):

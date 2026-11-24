@@ -10,6 +10,12 @@ jobs:
   calidad-y-pruebas:
     name: Linter, Formato y Pruebas (>= 85% cobertura)
     runs-on: ubuntu-latest
+    services:
+      mailpit:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
     env:
       DATABASE_URL: sqlite:///./ci_test.db
       JWT_SECRET_KEY: clave-ci-pruebas-automatizadas-seguras-32chars
@@ -44,7 +50,14 @@ jobs:
         run: ruff format --check app tests
 
       - name: Ejecutar Pruebas Unitarias, Integracion y E2E con Cobertura
-        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=85
+        run: pytest --junitxml=reportes/pruebas.xml --cov=app --cov-report=term-missing --cov-report=xml:reportes/cobertura.xml --cov-fail-under=85
+
+      - name: Conservar resultados y cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas
+          path: reportes/
 
   construccion-imagen:
     name: Construir Imagen Docker
