@@ -1,6 +1,12 @@
 name: CI - Calidad, Pruebas y Contenedor
 
 on:
+  workflow_dispatch:
+    inputs:
+      simular_fallo:
+        description: "Demostrar que un error de lint bloquea la construcci?n"
+        type: boolean
+        default: false
   push:
     branches: [main, FelipeLienlaf]
   pull_request:
@@ -43,6 +49,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Preparar fallo controlado en la copia temporal de CI
+        if: github.event_name == 'workflow_dispatch' && inputs.simular_fallo
+        run: echo 'print(nombre_sin_definir_para_demostracion)' > tests/fallo_controlado_ci.py
+
       - name: Ejecutar Linter (Ruff)
         run: ruff check app tests
 
@@ -69,4 +79,21 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Construir imagen Docker verificable
-        run: docker build -t galeria-arte-api:${{ github.sha }} .
+        run: docker build --label "org.opencontainers.image.revision=$GITHUB_SHA" -t "galeria-arte-api:$GITHUB_SHA" .
+
+      - name: Exportar imagen validada de main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p imagen
+          docker save "galeria-arte-api:$GITHUB_SHA" | gzip > imagen/galeria-api.tar.gz
+          cd imagen
+          sha256sum galeria-api.tar.gz > SHA256SUMS
+          echo "$GITHUB_SHA" > revision.txt
+
+      - name: Conservar imagen para promocion manual
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: galeria-api-${{ github.sha }}
+          path: imagen/
+          if-no-files-found: error

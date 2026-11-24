@@ -101,4 +101,4 @@ de Uvicorn. GitHub Actions publica ambos XML en el artefacto `reportes-pruebas`.
 
 [El workflow de GitHub Actions](.github/workflows/ci.yml) ejecuta Ruff y pytest antes de construir la imagen identificada con el SHA del commit. Los reportes se descargan en **Actions → ejecución del commit → Artifacts → reportes-pruebas**. Para comprobarlos localmente, abre `reportes/pruebas.xml` y `reportes/cobertura.xml` después del comando anterior.
 
-La documentación de esta revisión cubre la operación local. Queda pendiente registrar la URL de Kuberos UCT, el SHA desplegado y validado por CI, la comprobación de salud y persistencia y el procedimiento de reversión probado por el equipo.
+El [procedimiento de CI/CD y operación en Kuberos UCT](docs/despliegue.md) vincula las ejecuciones verificadas y describe la promoción, el bloqueo de fallos, las comprobaciones de salud y persistencia y la reversión. Incluye un registro de evidencias pendientes.
