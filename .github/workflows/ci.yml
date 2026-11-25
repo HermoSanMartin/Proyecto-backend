@@ -73,6 +73,9 @@ jobs:
     name: Construir Imagen Docker
     runs-on: ubuntu-latest
     needs: calidad-y-pruebas
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Obtener codigo fuente
@@ -125,3 +128,15 @@ jobs:
           name: galeria-api-${{ github.sha }}
           path: imagen/
           if-no-files-found: error
+      - name: Publicar en GHCR la imagen probada para Kubero UCT
+        if: github.ref == 'refs/heads/main'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          imagen="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/galeria-arte-api:$GITHUB_SHA"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker tag "galeria-arte-api:$GITHUB_SHA" "$imagen"
+          docker push "$imagen"
+          printf 'Imagen de contenedor para Kubero: `%s`\n' "$imagen" >> "$GITHUB_STEP_SUMMARY"
