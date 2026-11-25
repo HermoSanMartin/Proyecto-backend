@@ -22,7 +22,7 @@ app.add_middleware(
     allow_origins=configuracion.lista_cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "X-CSRF-Protection"],
 )
 
 registrar_manejadores(app)

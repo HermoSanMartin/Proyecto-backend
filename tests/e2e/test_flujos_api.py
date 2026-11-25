@@ -334,3 +334,12 @@ def test_contrato_error_validacion_y_openapi(client: Client):
     for estado in ("401", "422"):
         esquema = respuestas[estado]["content"]["application/json"]["schema"]
         assert esquema["$ref"] == "#/components/schemas/RespuestaError"
+
+
+def test_renovacion_y_logout_con_cookie_requieren_cabecera_csrf(client: Client, admin_creado):
+    _login(client, admin_creado.email, "AdminClaveSegura2026!")
+    for ruta in ("refresh", "logout"):
+        assert client.post(f"/api/v1/auth/{ruta}").status_code == 403
+    cabecera = {"X-CSRF-Protection": "1"}
+    assert client.post("/api/v1/auth/refresh", headers=cabecera).status_code == 200
+    assert client.post("/api/v1/auth/logout", headers=cabecera).status_code == 200
