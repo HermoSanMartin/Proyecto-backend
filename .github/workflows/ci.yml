@@ -81,6 +81,34 @@ jobs:
       - name: Construir imagen Docker verificable
         run: docker build --label "org.opencontainers.image.revision=$GITHUB_SHA" -t "galeria-arte-api:$GITHUB_SHA" .
 
+      - name: Arranque limpio con PostgreSQL y persistencia al reiniciar la API
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          export POSTGRES_PASSWORD="$(openssl rand -hex 24)"
+          export PGADMIN_PASSWORD="$(openssl rand -hex 24)"
+          export JWT_SECRET_KEY="$(openssl rand -hex 32)"
+          export PGADMIN_EMAIL=operador@example.com
+          printf 'services:\n  api:\n    image: galeria-arte-api:%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/imagen.yml"
+          compose=(docker compose -p verificacion -f docker-compose.yml -f "$RUNNER_TEMP/imagen.yml")
+          "${compose[@]}" up -d --no-build
+          salud() {
+            curl --fail --silent --show-error --retry 30 --retry-delay 2 --retry-all-errors \
+              http://localhost:8000/api/v1/salud | jq -e '.estado == "ok"'
+          }
+          salud
+          test "$("${compose[@]}" ps --services --status running | wc -l)" -eq 4
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://localhost:5050/misc/ping >/dev/null
+          curl -fsS http://localhost:8025/api/v1/messages >/dev/null
+          "${compose[@]}" exec -T api alembic current
+          datos=$(jq -nc --arg pw "Prueba9$(openssl rand -hex 16)" '{nombre:"Prueba CI",email:"persistencia@example.com",password:$pw}')
+          usuario=$(curl -fsS -H 'Content-Type: application/json' -d "$datos" http://localhost:8000/api/v1/auth/registro | jq -er '.id')
+          "${compose[@]}" restart api
+          salud
+          curl -fsS -H 'Content-Type: application/json' -d "$(jq -c '{email,password}' <<< "$datos")" \
+            http://localhost:8000/api/v1/auth/login | jq -e --argjson id "$usuario" '.usuario.id == $id'
+
       - name: Exportar imagen validada de main
         if: github.ref == 'refs/heads/main'
         run: |
