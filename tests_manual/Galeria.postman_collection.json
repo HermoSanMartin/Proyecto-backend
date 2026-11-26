@@ -1,0 +1,104 @@
+{
+  "info": {
+    "name": "Galería de arte · Alta de artista por administrador",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Iniciar sesión como administrador",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@galeria.cl\",\n  \"password\": \"{{admin_password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.unset('access_token');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const datos = pm.response.json();",
+              "pm.test('Sesión de administrador', () => { pm.response.to.have.status(200); pm.expect(datos.usuario.rol).to.eql('admin'); pm.expect(datos.access_token).to.be.a('string').and.not.empty; });",
+              "if (pm.response.code === 200 && datos.usuario.rol === 'admin') pm.collectionVariables.set('access_token', datos.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Crear artista",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/artistas",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre_artistico\": \"Artista de demostración\",\n  \"email\": \"{{correo_demo}}\",\n  \"nacionalidad\": \"Chilena\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.variables.set('correo_demo', 'demo.' + pm.variables.replaceIn('{{$guid}}') + '@example.com');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 Created', () => pm.response.to.have.status(201));",
+              "pm.test('Artista creado e identificado', () => { const artista = pm.response.json(); pm.expect(artista.id).to.be.a('number'); pm.expect(artista.email).to.eql(pm.variables.get('correo_demo')); pm.expect(artista.activo).to.eql(true); });",
+              "pm.collectionVariables.unset('access_token');"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

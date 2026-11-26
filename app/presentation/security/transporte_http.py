@@ -1,6 +1,7 @@
 from fastapi import Request, Response
 from fastapi.security import HTTPBearer
 
+from app.domain.excepciones import PermisoDenegado
 from app.infrastructure.config import configuracion
 
 esquema_bearer = HTTPBearer(auto_error=False)
@@ -32,4 +33,7 @@ def limpiar_cookie_refresh(response: Response) -> None:
 def extraer_refresh_token(request: Request, token_body: str | None = None) -> str | None:
     if token_body:
         return token_body
-    return request.cookies.get(NOMBRE_COOKIE_REFRESH)
+    cookie = request.cookies.get(NOMBRE_COOKIE_REFRESH)
+    if cookie and request.headers.get("X-CSRF-Protection") != "1":
+        raise PermisoDenegado("Se requiere X-CSRF-Protection para usar la cookie de sesion")
+    return cookie

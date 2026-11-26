@@ -14,6 +14,7 @@ from app.presentation.schemas.auth_schema import (
     UsuarioRegistroEntrada,
     UsuarioRespuesta,
 )
+from app.presentation.schemas.respuesta import RespuestaError
 from app.presentation.security.transporte_http import (
     establecer_cookie_refresh,
     extraer_refresh_token,
@@ -29,8 +30,11 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Autenticacion y Seguridad"])
     status_code=status.HTTP_201_CREATED,
     summary="Registrar una nueva cuenta de usuario",
     responses={
-        400: {"description": "Contrasena no cumple politica minima de 12 caracteres"},
-        409: {"description": "Correo ya registrado"},
+        400: {
+            "model": RespuestaError,
+            "description": "Contrasena no cumple politica minima de 12 caracteres",
+        },
+        409: {"model": RespuestaError, "description": "Correo ya registrado"},
     },
 )
 def registrar_usuario(
@@ -46,8 +50,11 @@ def registrar_usuario(
     response_model=TokenRespuesta,
     summary="Iniciar sesion y obtener tokens JWT",
     responses={
-        401: {"description": "Credenciales invalidas"},
-        429: {"description": "Cuenta bloqueada temporalmente por intentos fallidos"},
+        401: {"model": RespuestaError, "description": "Credenciales invalidas"},
+        429: {
+            "model": RespuestaError,
+            "description": "Cuenta bloqueada temporalmente por intentos fallidos",
+        },
     },
 )
 def login(
@@ -69,7 +76,7 @@ def login(
     "/me",
     response_model=UsuarioRespuesta,
     summary="Consultar perfil del usuario autenticado",
-    responses={401: {"description": "No autenticado o token invalido"}},
+    responses={401: {"model": RespuestaError, "description": "No autenticado o token invalido"}},
 )
 def obtener_perfil_actual(usuario: Usuario = Depends(obtener_usuario_actual)):
     return UsuarioRespuesta.model_validate(usuario)
@@ -79,7 +86,12 @@ def obtener_perfil_actual(usuario: Usuario = Depends(obtener_usuario_actual)):
     "/refresh",
     response_model=TokenRespuesta,
     summary="Rotar refresh token y emitir nuevo access token",
-    responses={401: {"description": "Refresh token invalido, expirado o reutilizado"}},
+    responses={
+        401: {
+            "model": RespuestaError,
+            "description": "Refresh token invalido, expirado o reutilizado",
+        }
+    },
 )
 def refrescar_sesion(
     request: Request,
@@ -138,8 +150,14 @@ def solicitar_recuperacion(
     response_model=MensajeOperacionRespuesta,
     summary="Restablecer contrasena usando JWT de recuperacion de un solo uso",
     responses={
-        400: {"description": "Nueva contrasena no cumple politica de seguridad"},
-        401: {"description": "Token de recuperacion invalido, expirado o ya utilizado"},
+        400: {
+            "model": RespuestaError,
+            "description": "Nueva contrasena no cumple politica de seguridad",
+        },
+        401: {
+            "model": RespuestaError,
+            "description": "Token de recuperacion invalido, expirado o ya utilizado",
+        },
     },
 )
 def restablecer_password(

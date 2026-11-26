@@ -159,11 +159,13 @@ class AuthService:
             usuario_id=usuario.id,
             jti=jti,
         )
-        self.repo_usuario.guardar_token_recuperacion(
+        registro = self.repo_usuario.guardar_token_recuperacion(
             usuario_id=usuario.id,
             jti=jti,
             expira_en=expira_en,
         )
+        if registro is None:
+            return None
         enlace = f"{configuracion.url_recuperacion_base}?token={token_recuperacion}"
         self.servicio_correo.enviar_recuperacion(usuario.email, enlace)
         return token_recuperacion

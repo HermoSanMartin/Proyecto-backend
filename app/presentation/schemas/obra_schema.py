@@ -1,6 +1,8 @@
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+
+from app.presentation.schemas.respuesta import ApiResponse
 
 ANIO_ACTUAL = date.today().year
 
@@ -22,9 +24,7 @@ class ObraActualizar(BaseModel):
     disponible: bool | None = None
 
 
-class ObraRespuesta(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class ObraRespuesta(ApiResponse):
     id: int
     titulo: str
     precio_estimado: float
@@ -34,7 +34,7 @@ class ObraRespuesta(BaseModel):
     artista_id: int
 
 
-class PaginaObras(BaseModel):
+class PaginaObras(ApiResponse):
     items: list[ObraRespuesta]
     total: int
     pagina: int

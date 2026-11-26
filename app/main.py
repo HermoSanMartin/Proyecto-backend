@@ -8,8 +8,10 @@ from app.presentation.routers.auth import router as auth_router
 from app.presentation.routers.exposiciones import router as exposiciones_router
 from app.presentation.routers.obra import router as obras_router
 from app.presentation.routers.solicitudes import router as solicitudes_router
+from app.presentation.schemas.respuesta import RespuestaError
 
 app = FastAPI(
+    responses={422: {"model": RespuestaError, "description": "Datos de entrada invalidos"}},
     title="API de Gestion de Galerias de Arte",
     description="Registro de artistas, obras, exposiciones, prestamos y seguridad JWT.",
     version="1.0.0",
@@ -20,7 +22,7 @@ app.add_middleware(
     allow_origins=configuracion.lista_cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "X-CSRF-Protection"],
 )
 
 registrar_manejadores(app)

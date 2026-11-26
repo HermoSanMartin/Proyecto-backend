@@ -12,6 +12,7 @@ from app.presentation.schemas.obra_schema import (
     ObraRespuesta,
     PaginaObras,
 )
+from app.presentation.schemas.respuesta import RespuestaError
 
 router = APIRouter(prefix="/api/v1/obras", tags=["Obras de arte"])
 
@@ -23,10 +24,10 @@ router = APIRouter(prefix="/api/v1/obras", tags=["Obras de arte"])
     summary="Registrar una obra de arte (Solo Admin)",
     description="Crea una obra asociada a un artista existente. Requiere rol administrador.",
     responses={
-        401: {"description": "No autenticado"},
-        403: {"description": "Permisos insuficientes"},
-        404: {"description": "El artista no existe"},
-        422: {"description": "Datos invalidos"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        403: {"model": RespuestaError, "description": "Permisos insuficientes"},
+        404: {"model": RespuestaError, "description": "El artista no existe"},
+        422: {"model": RespuestaError, "description": "Datos invalidos"},
     },
 )
 def crear_obra(
@@ -66,7 +67,7 @@ def listar_obras(
     response_model=ObraRespuesta,
     summary="Obtener una obra por ID",
     description="Devuelve los datos de una obra.",
-    responses={404: {"description": "La obra no existe"}},
+    responses={404: {"model": RespuestaError, "description": "La obra no existe"}},
 )
 def obtener_obra(obra_id: int, servicio: ObraService = Depends(obtener_servicio_obra)):
     return servicio.obtener(obra_id)
@@ -78,9 +79,9 @@ def obtener_obra(obra_id: int, servicio: ObraService = Depends(obtener_servicio_
     summary="Actualizar una obra (Solo Admin)",
     description="Modifica solo los campos enviados. Requiere rol administrador.",
     responses={
-        401: {"description": "No autenticado"},
-        403: {"description": "Permisos insuficientes"},
-        404: {"description": "La obra no existe"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        403: {"model": RespuestaError, "description": "Permisos insuficientes"},
+        404: {"model": RespuestaError, "description": "La obra no existe"},
     },
 )
 def actualizar_obra(
@@ -98,9 +99,9 @@ def actualizar_obra(
     summary="Eliminar una obra (Solo Admin)",
     description="Elimina la obra de forma permanente. Requiere rol administrador.",
     responses={
-        401: {"description": "No autenticado"},
-        403: {"description": "Permisos insuficientes"},
-        404: {"description": "La obra no existe"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        403: {"model": RespuestaError, "description": "Permisos insuficientes"},
+        404: {"model": RespuestaError, "description": "La obra no existe"},
     },
 )
 def eliminar_obra(

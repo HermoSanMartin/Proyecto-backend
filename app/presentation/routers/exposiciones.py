@@ -5,6 +5,7 @@ from app.domain.exposicion import Exposicion
 from app.domain.usuario import Usuario
 from app.presentation.dependencies import exigir_admin, obtener_servicio_exposicion
 from app.presentation.schemas.exposicion_schema import ExposicionCrear, ExposicionRespuesta
+from app.presentation.schemas.respuesta import RespuestaError
 
 router = APIRouter(prefix="/api/v1/exposiciones", tags=["Exposiciones"])
 
@@ -16,9 +17,9 @@ router = APIRouter(prefix="/api/v1/exposiciones", tags=["Exposiciones"])
     summary="Registrar una exposicion (Solo Admin)",
     description="Crea una exposicion. Requiere rol administrador.",
     responses={
-        401: {"description": "No autenticado"},
-        403: {"description": "Permisos insuficientes"},
-        422: {"description": "Datos invalidos o fechas incoherentes"},
+        401: {"model": RespuestaError, "description": "No autenticado"},
+        403: {"model": RespuestaError, "description": "Permisos insuficientes"},
+        422: {"model": RespuestaError, "description": "Datos invalidos o fechas incoherentes"},
     },
 )
 def crear_exposicion(
@@ -44,7 +45,7 @@ def listar_exposiciones(servicio: ExposicionService = Depends(obtener_servicio_e
     response_model=ExposicionRespuesta,
     summary="Obtener una exposicion por ID",
     description="Devuelve los datos de una exposicion.",
-    responses={404: {"description": "La exposicion no existe"}},
+    responses={404: {"model": RespuestaError, "description": "La exposicion no existe"}},
 )
 def obtener_exposicion(
     exposicion_id: int,

@@ -1,6 +1,9 @@
+import re
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.application.services.auth_service import AuthService
@@ -19,7 +22,16 @@ from app.infrastructure.repositories.solicitud_repository import SolicitudReposi
 from app.infrastructure.repositories.usuario_repository import UsuarioRepository
 from app.infrastructure.security.jwt_manager import crear_recovery_token
 from app.infrastructure.security.password_hasher import hashear_password, verificar_password
-from tests.conftest import CapturadorCorreoFalso
+
+
+class CapturadorCorreoFalso:
+    def __init__(self) -> None:
+        self.enviados: list[dict[str, str]] = []
+
+    def enviar_recuperacion(self, destinatario: str, enlace: str) -> None:
+        match = re.search(r"token=([^&\s]+)", enlace)
+        token = match.group(1) if match else ""
+        self.enviados.append({"destinatario": destinatario, "enlace": enlace, "token": token})
 
 
 def test_integracion_usuario_repository_y_unicidad(db_session: Session):
@@ -158,7 +170,10 @@ def test_integracion_obras_filtro_orden_y_paginacion(db_session: Session):
     assert items[0].titulo == "Altazor"
 
 
-def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(db_session: Session):
+@pytest.mark.parametrize("fallo_segunda_escritura", [False, True], ids=["aprobar", "rollback"])
+def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(
+    db_session: Session, fallo_segunda_escritura: bool
+):
     repo_artista = ArtistaRepository(db_session)
     repo_obra = ObraRepository(db_session)
     repo_expo = ExposicionRepository(db_session)
@@ -204,6 +219,25 @@ def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(db_session: 
     )
     assert sol.estado_solicitud == EstadoSolicitud.PENDIENTE
 
+    if fallo_segunda_escritura:
+        db_session.execute(
+            text(
+                "CREATE TRIGGER fallo_aprobacion BEFORE UPDATE ON solicitudes_prestamo "
+                "BEGIN SELECT RAISE(ABORT, 'fallo de prueba'); END"
+            )
+        )
+        db_session.commit()
+        with pytest.raises(IntegrityError, match="fallo de prueba"):
+            serv_sol.aprobar(sol.id)
+        with Session(db_session.get_bind()) as verificacion:
+            assert ObraRepository(verificacion).obtener_por_id(obra.id).disponible
+            assert (
+                SolicitudRepository(verificacion).obtener_por_id(sol.id).estado_solicitud
+                == EstadoSolicitud.PENDIENTE
+            )
+        db_session.execute(text("DROP TRIGGER fallo_aprobacion"))
+        db_session.commit()
+
     aprobada = serv_sol.aprobar(sol.id)
     assert aprobada.estado_solicitud == EstadoSolicitud.APROBADO
     assert repo_obra.obtener_por_id(obra.id).disponible is False
@@ -217,3 +251,18 @@ def test_integracion_solicitud_prestamo_aprobacion_y_disponibilidad(db_session: 
             )
         )
     assert verificar_password("x", hashear_password("x")) is True
+
+
+def test_recuperacion_admite_nuevo_envio_tras_la_espera(db_session: Session):
+    from app.infrastructure.models import UsuarioORM
+
+    correo = CapturadorCorreoFalso()
+    servicio = AuthService(UsuarioRepository(db_session), correo)
+    usuario = servicio.registrar("Cuenta Demo", "demo.espera@example.com", "ClaveSegura2026!")
+    assert servicio.solicitar_recuperacion(usuario.email)
+    assert servicio.solicitar_recuperacion(usuario.email) is None
+    cuenta = db_session.get(UsuarioORM, usuario.id)
+    cuenta.proxima_recuperacion = datetime.now(UTC) - timedelta(seconds=1)
+    db_session.commit()
+    assert servicio.solicitar_recuperacion(usuario.email)
+    assert len(correo.enviados) == 2

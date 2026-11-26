@@ -1,8 +1,9 @@
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from app.domain.exposicion import EstadoExposicion
+from app.presentation.schemas.respuesta import ApiResponse
 
 
 class ExposicionCrear(BaseModel):
@@ -19,9 +20,7 @@ class ExposicionCrear(BaseModel):
         return self
 
 
-class ExposicionRespuesta(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class ExposicionRespuesta(ApiResponse):
     id: int
     nombre_evento: str
     lugar: str

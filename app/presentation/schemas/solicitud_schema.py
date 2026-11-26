@@ -1,8 +1,9 @@
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from app.domain.solicitud_prestamo import EstadoSolicitud
+from app.presentation.schemas.respuesta import ApiResponse
 
 
 class SolicitudCrear(BaseModel):
@@ -11,9 +12,7 @@ class SolicitudCrear(BaseModel):
     dias_prestamo: int = Field(ge=1, le=365)
 
 
-class SolicitudRespuesta(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class SolicitudRespuesta(ApiResponse):
     id: int
     obra_id: int
     exposicion_id: int

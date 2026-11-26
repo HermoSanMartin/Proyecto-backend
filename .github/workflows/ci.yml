@@ -1,6 +1,12 @@
 name: CI - Calidad, Pruebas y Contenedor
 
 on:
+  workflow_dispatch:
+    inputs:
+      simular_fallo:
+        description: "Demostrar que un error de lint bloquea la construcci?n"
+        type: boolean
+        default: false
   push:
     branches: [main, FelipeLienlaf]
   pull_request:
@@ -10,6 +16,12 @@ jobs:
   calidad-y-pruebas:
     name: Linter, Formato y Pruebas (>= 85% cobertura)
     runs-on: ubuntu-latest
+    services:
+      mailpit:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
     env:
       DATABASE_URL: sqlite:///./ci_test.db
       JWT_SECRET_KEY: clave-ci-pruebas-automatizadas-seguras-32chars
@@ -37,6 +49,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Preparar fallo controlado en la copia temporal de CI
+        if: github.event_name == 'workflow_dispatch' && inputs.simular_fallo
+        run: echo 'print(nombre_sin_definir_para_demostracion)' > tests/fallo_controlado_ci.py
+
       - name: Ejecutar Linter (Ruff)
         run: ruff check app tests
 
@@ -44,16 +60,83 @@ jobs:
         run: ruff format --check app tests
 
       - name: Ejecutar Pruebas Unitarias, Integracion y E2E con Cobertura
-        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=85
+        run: pytest --junitxml=reportes/pruebas.xml --cov=app --cov-report=term-missing --cov-report=xml:reportes/cobertura.xml --cov-fail-under=85
+
+      - name: Conservar resultados y cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas
+          path: reportes/
 
   construccion-imagen:
     name: Construir Imagen Docker
     runs-on: ubuntu-latest
     needs: calidad-y-pruebas
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Obtener codigo fuente
         uses: actions/checkout@v4
 
       - name: Construir imagen Docker verificable
-        run: docker build -t galeria-arte-api:${{ github.sha }} .
+        run: docker build --label "org.opencontainers.image.revision=$GITHUB_SHA" -t "galeria-arte-api:$GITHUB_SHA" .
+
+      - name: Arranque limpio con PostgreSQL y persistencia al reiniciar la API
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          export POSTGRES_PASSWORD="$(openssl rand -hex 24)"
+          export PGADMIN_PASSWORD="$(openssl rand -hex 24)"
+          export JWT_SECRET_KEY="$(openssl rand -hex 32)"
+          export PGADMIN_EMAIL=operador@example.com
+          printf 'services:\n  api:\n    image: galeria-arte-api:%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/imagen.yml"
+          compose=(docker compose -p verificacion -f docker-compose.yml -f "$RUNNER_TEMP/imagen.yml")
+          "${compose[@]}" up -d --no-build
+          salud() {
+            curl --fail --silent --show-error --retry 30 --retry-delay 2 --retry-all-errors \
+              http://localhost:8000/api/v1/salud | jq -e '.estado == "ok"'
+          }
+          salud
+          test "$("${compose[@]}" ps --services --status running | wc -l)" -eq 4
+          curl -fsS --retry 30 --retry-delay 2 --retry-all-errors http://localhost:5050/misc/ping >/dev/null
+          curl -fsS http://localhost:8025/api/v1/messages >/dev/null
+          "${compose[@]}" exec -T api alembic current
+          datos=$(jq -nc --arg pw "Prueba9$(openssl rand -hex 16)" '{nombre:"Prueba CI",email:"persistencia@example.com",password:$pw}')
+          usuario=$(curl -fsS -H 'Content-Type: application/json' -d "$datos" http://localhost:8000/api/v1/auth/registro | jq -er '.id')
+          "${compose[@]}" restart api
+          salud
+          curl -fsS -H 'Content-Type: application/json' -d "$(jq -c '{email,password}' <<< "$datos")" \
+            http://localhost:8000/api/v1/auth/login | jq -e --argjson id "$usuario" '.usuario.id == $id'
+
+      - name: Exportar imagen validada de main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p imagen
+          docker save "galeria-arte-api:$GITHUB_SHA" | gzip > imagen/galeria-api.tar.gz
+          cd imagen
+          sha256sum galeria-api.tar.gz > SHA256SUMS
+          echo "$GITHUB_SHA" > revision.txt
+
+      - name: Conservar imagen para promocion manual
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: galeria-api-${{ github.sha }}
+          path: imagen/
+          if-no-files-found: error
+      - name: Publicar en GHCR la imagen probada para Kubero UCT
+        if: github.ref == 'refs/heads/main'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          imagen="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/galeria-arte-api:$GITHUB_SHA"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker tag "galeria-arte-api:$GITHUB_SHA" "$imagen"
+          docker push "$imagen"
+          printf 'Imagen de contenedor para Kubero: `%s`\n' "$imagen" >> "$GITHUB_STEP_SUMMARY"

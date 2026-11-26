@@ -11,12 +11,15 @@ from app.domain.excepciones import (
     PermisoDenegado,
     RecursoNoEncontrado,
 )
+from app.presentation.schemas.respuesta import ErrorAPI, RespuestaError
 
 
 def _respuesta(estado: int, codigo: str, mensaje: str, detalles: list | None = None):
     return JSONResponse(
         status_code=estado,
-        content={"error": {"code": codigo, "message": mensaje, "details": detalles or []}},
+        content=RespuestaError(
+            error=ErrorAPI(code=codigo, message=mensaje, details=detalles or [])
+        ).model_dump(mode="json"),
     )
 
 

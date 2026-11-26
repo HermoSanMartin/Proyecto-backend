@@ -17,8 +17,13 @@ class ExposicionRepository:
         self.db.refresh(orm)
         return orm_a_dominio(orm)
 
-    def obtener_por_id(self, exposicion_id: int) -> Exposicion | None:
-        orm = self.db.get(ExposicionORM, exposicion_id)
+    def obtener_por_id(self, exposicion_id: int, *, bloquear: bool = False) -> Exposicion | None:
+        orm = self.db.get(
+            ExposicionORM,
+            exposicion_id,
+            with_for_update=bloquear or None,
+            populate_existing=bloquear,
+        )
         return orm_a_dominio(orm) if orm else None
 
     def listar(self) -> list[Exposicion]:

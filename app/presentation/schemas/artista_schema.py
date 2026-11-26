@@ -1,4 +1,6 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field
+
+from app.presentation.schemas.respuesta import ApiResponse
 
 
 class ArtistaCrear(BaseModel):
@@ -16,9 +18,7 @@ class ArtistaActualizar(BaseModel):
     activo: bool | None = None
 
 
-class ArtistaRespuesta(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class ArtistaRespuesta(ApiResponse):
     id: int
     nombre_artistico: str
     email: EmailStr

@@ -1,8 +1,11 @@
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Configuracion(BaseSettings):
     database_url: str
+    demo_admin_password: SecretStr | None = None
+    demo_visitante_password: SecretStr | None = None
 
     jwt_secret_key: str = "clave-solo-para-entorno-de-pruebas-locales-32-chars"
     jwt_algorithm: str = "HS256"
