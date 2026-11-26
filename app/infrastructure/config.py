@@ -1,4 +1,4 @@
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -7,7 +7,7 @@ class Configuracion(BaseSettings):
     demo_admin_password: SecretStr | None = None
     demo_visitante_password: SecretStr | None = None
 
-    jwt_secret_key: str = "clave-solo-para-entorno-de-pruebas-locales-32-chars"
+    jwt_secret_key: str = Field(min_length=32)
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 7

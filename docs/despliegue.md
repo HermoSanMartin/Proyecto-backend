@@ -1,4 +1,4 @@
-﻿# CI/CD y operación en Kuberos UCT
+# CI/CD y operación en Kuberos UCT
 
 ## Evidencias disponibles
 
@@ -7,7 +7,7 @@
 | `f92f4301986aecdd9e18122a530756d6a651511a` | [Actions, push en main](https://github.com/HermoSanMartin/Proyecto-backend/actions/runs/44630597930) | Control de calidad y construcción de imagen aprobados. |
 | `69a1a876163d05a80733a000746e1f972631af25` | [Actions, pull request](https://github.com/HermoSanMartin/Proyecto-backend/actions/runs/45450075344) | Ejecución exitosa para la rama del PR. |
 
-En la revisión de evidencias del 24 de noviembre de 2026, las cinco ejecuciones disponibles en Actions eran exitosas. El repositorio no tenía registros de despliegue en la API de GitHub. Kuberos puede gestionar despliegues por separado. Aún se desconoce la URL institucional y el SHA en ejecución. Los enlaces de la tabla corresponden a versiones anteriores al cambio de exportación de imagen.
+El 26 de noviembre se confirmó el acceso del grupo ICINF1108-S1-G7 al [pipeline institucional galeria-arte-g7](https://kubero.inf.uct.cl/pipeline/galeria-arte-g7/apps). La aplicación de producción usa la imagen del commit integrado y atiende en [salud de la API](https://galeria-arte-g7.inf.uct.cl/api/v1/salud). El [PR #11](https://github.com/HermoSanMartin/Proyecto-backend/pull/11) quedó integrado en main en `a5c77f0ae7e5e18981946b043e84d826f516f764`. Los [controles del PR](https://github.com/HermoSanMartin/Proyecto-backend/actions/runs/45728759884) aprobaron la revisión que incorpora la publicación en GHCR.
 
 ## Demostrar que CI bloquea un fallo
 
@@ -19,7 +19,7 @@ Una vez integrado el workflow en la rama principal, abre **Actions → CI - Cali
 
 ## Promoción de una revisión aprobada
 
-1. Solicita al responsable de Kuberos UCT el nombre de la aplicación, el acceso autorizado y el mecanismo institucional de publicación. Conserva los secretos en la plataforma. Configura PostgreSQL persistente, un correo de prueba restringido, secreto JWT propio, orígenes CORS explícitos, HTTPS y `COOKIE_SECURE=true`. Configura `URL_RECUPERACION_BASE` según la URL institucional.
+1. Abre el pipeline galeria-arte-g7 y selecciona Production. Conserva los secretos en la plataforma. Configura PostgreSQL persistente, un correo de prueba restringido, secreto JWT propio, orígenes CORS explícitos, HTTPS y `COOKIE_SECURE=true`. Configura `URL_RECUPERACION_BASE` según la URL institucional.
 2. Selecciona una ejecución exitosa de **main**. Guarda el enlace y el SHA completo. Descarga y extrae el artefacto `galeria-api-<SHA>`. Contiene la imagen comprimida, `revision.txt` y el checksum. En PowerShell, desde la carpeta extraída:
 
    ```powershell
@@ -30,12 +30,12 @@ Una vez integrado el workflow en la rama principal, abre **Actions → CI - Cali
    docker image inspect "galeria-arte-api:$revision" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'
    ```
 
-3. Contrasta la etiqueta con el SHA de Actions. Si la institución usa un registro, publica la imagen validada mediante ese registro autorizado y selecciona su digest en Kuberos. Si la institución despliega desde Git, fija el commit aprobado y conserva el registro del build institucional asociado a ese SHA. Configura la promoción para que sólo seleccione revisiones aprobadas. Documenta el mecanismo efectivamente utilizado.
+3. Tras integrar el PR, abre el resumen de la ejecución exitosa de main y copia la referencia completa de GHCR en **Imagen de contenedor**. Su formato es `ghcr.io/hermosanmartin/galeria-arte-api:<SHA completo>`. Usa el valor real que emitió Actions. Verifica que Kubero puede descargar la imagen, configura el puerto interno 8000 y conserva el digest mostrado al publicarla.
 4. Antes de actualizar, registra la revisión en servicio y la revisión Alembic actual, revisa las migraciones y prepara una copia recuperable de PostgreSQL. El comando de inicio aplica `alembic upgrade head` y ejecuta el seeder. Coordina estos pasos para que una sola instancia inicialice la base durante la actualización.
 
 ## Comprobar salud y persistencia
 
-Desde un equipo autorizado, asigna a `$url` la URL **HTTPS** real y a `$id` el ID de un artista de demostración existente. Si se necesita crear uno, usa una cuenta de prueba autorizada y conserva el ID devuelto.
+Desde un equipo autorizado, asigna a `$url` la URL **HTTPS** real y a `$id` el ID de un artista creado para esta prueba mediante una cuenta administradora autorizada. Conserva el ID devuelto y usa un nombre único para distinguir el registro de los que genera el seeder en cada arranque.
 
 ```powershell
 $salud = Invoke-WebRequest "$url/api/v1/salud" -UseBasicParsing
@@ -64,9 +64,11 @@ Localiza la última revisión saludable aprobada por CI y su digest o SHA. Compa
 | Evidencia por vincular | Estado |
 | --- | --- |
 | Dos enlaces de Actions para fallo controlado y ejecución corregida | Pendiente de ejecutar el workflow integrado |
-| Ejecución aprobada de main para el commit final y artefacto o digest | Pendiente de la integración final |
-| Nombre en Kuberos UCT, URL HTTPS, historial de despliegue y SHA servido | Pendiente de acceso institucional |
-| HTTP 200, hora, logs y registro antes y después del reinicio | Pendiente de comprobación institucional |
+| Ejecución aprobada de main para el commit final y artefacto o digest | [CI aprobada de main](https://github.com/HermoSanMartin/Proyecto-backend/actions/runs/45752614780) · [Reportes de pruebas y cobertura](https://github.com/HermoSanMartin/Proyecto-backend/actions/runs/45752614780/artifacts/15085852592) · Revisión integrada `a5c77f0` |
+| Nombre en Kuberos UCT, URL HTTPS, historial de despliegue y SHA servido | [Aplicación y eventos de producción](https://kubero.inf.uct.cl/pipeline/galeria-arte-g7/production/galeria-arte-g7/detail) · imagen GHCR etiquetada con el SHA completo de main indicado arriba |
+| Salud y persistencia (26 de noviembre de 2026, hora de Chile) | HTTPS 200, `{"estado":"ok"}`. Alta de usuario de prueba 201, ID 3. Tras reiniciar la API desde Kubero, login 200 con el mismo ID 3. PostgreSQL usa un volumen persistente CephFS de 1 GiB. |
 | Revisión anterior compatible y resultado del ensayo de reversión | Pendiente de comprobación institucional |
 
 Si el equipo carece de permisos o la plataforma está indisponible, registra la fecha, la solicitud de acceso y la respuesta del responsable. Corresponde al docente autorizar una comprobación equivalente.
+
+En los registros del contenedor web, Uvicorn completó el arranque a la 01:11:30. Kubero reemplazó el pod web terminado en 448h4 por el terminado en 59pgs. El DNS público resolvió el subdominio mediante proxy.inf.uct.cl. Durante la comprobación, el resolvedor local devolvía NXDOMAIN, por lo que se consultó el ingreso institucional manteniendo el nombre HTTPS y la validación del certificado. El correo de recuperación aún requiere un servicio SMTP accesible desde producción.
