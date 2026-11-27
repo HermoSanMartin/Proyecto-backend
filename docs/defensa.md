@@ -63,11 +63,23 @@ Las filas identifican cuentas observadas en el historial integrado. Para cerrar 
 
 | Responsable | Trabajo asignado | Evidencia para el grupo | Estado |
 | --- | --- | --- | --- |
-| Fabián (F4b1anxx) | Calidad y permisos. Ejecutar los tres casos de alta de artista. | SHA desplegado, hora, rol, estado HTTP observado e ID del artista creado. | Por ejecutar |
-| Sebastián (HermoSanMartin) | Dominio, datos y operación. Verificar la persistencia del artista después del reinicio. | SHA de la imagen, pods anterior y nuevo, salud, ID y nombre antes y después. | Espera el ID de Fabián |
+| Codex, a solicitud de Felipe | Calidad y permisos. Ejecutar los tres casos de alta de artista. | SHA desplegado, hora, rol, estado HTTP observado e ID del artista creado. | Verificado el 27 de noviembre de 2026 |
+| Sebastián (HermoSanMartin) | Dominio, datos y operación. Verificar la persistencia del artista después del reinicio. | SHA de la imagen, pods anterior y nuevo, salud, ID y nombre antes y después. | Listo para verificar con el ID 3 |
 | Felipe (felipelienlaf) | Coordinación, documentación e integración. Revisar las evidencias y organizar el ensayo. | Enlaces a los PR de cada autor, revisión y resultado del ensayo. | Espera las evidencias |
 
-### Fabián · Un artista y tres resultados
+### Permisos de alta de artista en producción
+
+El 27 de noviembre de 2026, Codex ejecutó la prueba a solicitud de Felipe con HTTPX desde el pod `galeria-arte-g7-kuberoapp-web-7c5c64ffcc-fqwff`, contra la API en ejecución por loopback. Kubero mostraba la imagen con SHA `52823c3c3c14e9d4d9c4c445bb4c2e04a433390d`. Se envió el mismo cuerpo en los tres casos.
+
+| Credencial | Login | Alta de artista |
+| --- | --- | --- |
+| Sin token | — | 401 Unauthorized |
+| Usuario visitante | 200 OK | 403 Forbidden |
+| Administrador | 200 OK | 201 Created |
+
+La consulta posterior por ID devolvió 200. También se abrió el registro por HTTPS público y se comprobó el ID **3**, el nombre **Permisos G7 e1dd40a6** y el estado activo. Esta lectura sirve como referencia previa al reinicio. [Consultar artista en Kubero](https://galeria-arte-g7.inf.uct.cl/api/v1/artistas/3)
+
+### Cómo repetir los tres casos en Postman
 
 Importa la [colección de Postman](../tests_manual/Galeria.postman_collection.json). La colección usa `http://127.0.0.1:8000` por defecto. Para probar Kubero, crea y selecciona un entorno de Postman con `base_url` igual a `https://galeria-arte-g7.inf.uct.cl` (sin barra final). Configura `admin_password` como valor privado del entorno elegido.
 
@@ -77,7 +89,7 @@ Importa la [colección de Postman](../tests_manual/Galeria.postman_collection.js
 
 ### Sebastián · Persistencia del artista
 
-1. En el [panel de producción](https://kubero.inf.uct.cl/pipeline/galeria-arte-g7/apps), registra el SHA de la API y el nombre del pod web. Consulta `GET /api/v1/artistas/{id}` con el ID de Fabián y guarda el estado HTTP, ID y nombre.
+1. En el [panel de producción](https://kubero.inf.uct.cl/pipeline/galeria-arte-g7/apps), registra el SHA de la API y el nombre del pod web. Consulta `GET /api/v1/artistas/{id}` con el ID 3 y guarda el estado HTTP, ID y nombre.
 2. Reinicia únicamente la aplicación `galeria-arte-g7`. Espera a que salga el pod anterior y el nuevo esté listo. Registra el nuevo pod y la respuesta de [salud](https://galeria-arte-g7.inf.uct.cl/api/v1/salud).
 3. Repite la consulta por ID. Registra si el estado es 200 y si el ID y el nombre coinciden. Si difieren, documenta la diferencia. Conserva el artista para el ensayo.
 
