@@ -81,11 +81,7 @@ La consulta posterior por ID devolvió 200. También se abrió el registro por H
 
 ### Cómo repetir los tres casos en Postman
 
-Importa la [colección de Postman](../tests_manual/Galeria.postman_collection.json). La colección usa `http://127.0.0.1:8000` por defecto. Para probar Kubero, crea y selecciona un entorno de Postman con `base_url` igual a `https://galeria-arte-g7.inf.uct.cl` (sin barra final). Configura `admin_password` como valor privado del entorno elegido.
-
-1. Duplica el alta para los casos negativos y conserva un cuerpo válido. Con **No Auth**, envía `POST /api/v1/artistas` y registra el estado observado. Se espera 401.
-2. Inicia sesión con una cuenta de prueba de rol usuario. Envía el alta con su access token como **Bearer Token**. Se espera 403.
-3. Ejecuta las dos peticiones originales de la copia institucional en orden. El login de administrador debe devolver 200 y el alta 201. Pasa a Sebastián el ID y el nombre artístico devueltos. Guarda las evidencias con las credenciales y cabeceras de autorización ocultas.
+Importa la [colección de Postman](../tests_manual/Galeria.postman_collection.json). La colección usa `http://127.0.0.1:8000` por defecto. Para probar Kubero, crea y selecciona un entorno de Postman con `base_url` igual a `https://galeria-arte-g7.inf.uct.cl` (sin barra final). Selecciona un entorno de Postman y define como valores privados locales `visitante_password` y `admin_password`. Ejecuta las cinco peticiones en orden, manualmente o desde el Runner. Espera 401 en el alta sin token, 200 en el login de visitante, 403 en su intento de alta, 200 en el login de administrador y 201 en el alta final. La última respuesta contiene el ID del artista creado. Guarda el ID y el nombre devueltos para la comprobación de persistencia.
 
 ### Persistencia del artista · Procedimiento para Sebastián
 
