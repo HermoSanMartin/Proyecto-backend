@@ -3,12 +3,19 @@
     "name": "Galería de arte · Alta de artista por administrador",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    }
+  ],
   "item": [
     {
       "name": "1. Iniciar sesión como administrador",
       "request": {
         "method": "POST",
-        "url": "http://127.0.0.1:8000/api/v1/auth/login",
+        "url": "{{base_url}}/api/v1/auth/login",
         "header": [
           {
             "key": "Content-Type",
@@ -51,7 +58,7 @@
       "name": "2. Crear artista",
       "request": {
         "method": "POST",
-        "url": "http://127.0.0.1:8000/api/v1/artistas",
+        "url": "{{base_url}}/api/v1/artistas",
         "header": [
           {
             "key": "Content-Type",

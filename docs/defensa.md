@@ -69,7 +69,7 @@ Las filas identifican cuentas observadas en el historial integrado. Para cerrar 
 
 ### Fabián · Un artista y tres resultados
 
-Importa la [colección de Postman](../tests_manual/Galeria.postman_collection.json). Sus dos peticiones apuntan a localhost. En una copia para la demostración, sustituye el origen de ambas por `https://galeria-arte-g7.inf.uct.cl` y conserva las rutas. Configura `admin_password` en tu entorno privado.
+Importa la [colección de Postman](../tests_manual/Galeria.postman_collection.json). La colección usa `http://127.0.0.1:8000` por defecto. Para probar Kubero, crea y selecciona un entorno de Postman con `base_url` igual a `https://galeria-arte-g7.inf.uct.cl` (sin barra final). Configura `admin_password` como valor privado del entorno elegido.
 
 1. Duplica el alta para los casos negativos y conserva un cuerpo válido. Con **No Auth**, envía `POST /api/v1/artistas` y registra el estado observado. Se espera 401.
 2. Inicia sesión con una cuenta de prueba de rol usuario. Envía el alta con su access token como **Bearer Token**. Se espera 403.
