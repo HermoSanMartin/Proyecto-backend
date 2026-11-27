@@ -64,7 +64,7 @@ Las filas identifican cuentas observadas en el historial integrado. Para cerrar 
 | Responsable | Trabajo asignado | Evidencia para el grupo | Estado |
 | --- | --- | --- | --- |
 | Codex, a solicitud de Felipe | Calidad y permisos. Ejecutar los tres casos de alta de artista. | SHA desplegado, hora, rol, estado HTTP observado e ID del artista creado. | Verificado el 27 de noviembre de 2026 |
-| Sebastián (HermoSanMartin) | Dominio, datos y operación. Verificar la persistencia del artista después del reinicio. | SHA de la imagen, pods anterior y nuevo, salud, ID y nombre antes y después. | Listo para verificar con el ID 3 |
+| Sebastián (HermoSanMartin) | Dominio, datos y operación. Verificar la persistencia del artista después del reinicio. | SHA de la imagen, pods anterior y nuevo, salud, ID y nombre antes y después. | Verificado por Codex a solicitud de Felipe. Sebastián puede repetir el procedimiento. |
 | Felipe (felipelienlaf) | Coordinación, documentación e integración. Revisar las evidencias y organizar el ensayo. | Enlaces a los PR de cada autor, revisión y resultado del ensayo. | Espera las evidencias |
 
 ### Permisos de alta de artista en producción
@@ -87,7 +87,18 @@ Importa la [colección de Postman](../tests_manual/Galeria.postman_collection.js
 2. Inicia sesión con una cuenta de prueba de rol usuario. Envía el alta con su access token como **Bearer Token**. Se espera 403.
 3. Ejecuta las dos peticiones originales de la copia institucional en orden. El login de administrador debe devolver 200 y el alta 201. Pasa a Sebastián el ID y el nombre artístico devueltos. Guarda las evidencias con las credenciales y cabeceras de autorización ocultas.
 
-### Sebastián · Persistencia del artista
+### Persistencia del artista · Procedimiento para Sebastián
+
+Codex ejecutó la comprobación a solicitud de Felipe el 27 de noviembre de 2026. En producción se usó **Acciones → Reiniciar** sobre la API. La imagen conservó el SHA `52823c3c3c14e9d4d9c4c445bb4c2e04a433390d`.
+
+| Observación | Antes | Después |
+| --- | --- | --- |
+| Pod web listo | `galeria-arte-g7-kuberoapp-web-7c5c64ffcc-fqwff` | `galeria-arte-g7-kuberoapp-web-7f8cd99649-mwpw2` |
+| Artista consultado por ID | 3 · Permisos G7 e1dd40a6 · activo | 3 · Permisos G7 e1dd40a6 · activo |
+
+Cuando Kubero mostró únicamente el nuevo pod y «1 de 1 listos», ambos GET por HTTPS devolvieron 200. La ruta de salud respondió `{"estado":"ok"}`. [Consultar artista](https://galeria-arte-g7.inf.uct.cl/api/v1/artistas/3) · [Consultar salud](https://galeria-arte-g7.inf.uct.cl/api/v1/salud)
+
+Para repetir la prueba durante la defensa:
 
 1. En el [panel de producción](https://kubero.inf.uct.cl/pipeline/galeria-arte-g7/apps), registra el SHA de la API y el nombre del pod web. Consulta `GET /api/v1/artistas/{id}` con el ID 3 y guarda el estado HTTP, ID y nombre.
 2. Reinicia únicamente la aplicación `galeria-arte-g7`. Espera a que salga el pod anterior y el nuevo esté listo. Registra el nuevo pod y la respuesta de [salud](https://galeria-arte-g7.inf.uct.cl/api/v1/salud).
