@@ -50,7 +50,7 @@ Para detener el conjunto y conservar el volumen de PostgreSQL, usa `docker compo
 
 ## Demostración y recorrido de una petición
 
-Importa [la colección de Postman](tests_manual/Galeria.postman_collection.json). Define `admin_password` como valor local usando la clave de demostración del administrador. Envía primero el login y después la creación de artista. El primero devuelve `200` y guarda el access token. El segundo envía ese token como Bearer y, si se crea el artista, devuelve `201` y su ID. La misma operación devuelve `401` con credenciales ausentes o inválidas y `403` con un usuario autenticado que carece del rol administrador.
+Importa [la colección de Postman](tests_manual/Galeria.postman_collection.json). Selecciona un entorno de Postman y define como valores privados locales `visitante_password` y `admin_password`. Ejecuta las cinco peticiones en orden, manualmente o desde el Runner. Espera 401 en el alta sin token, 200 en el login de visitante, 403 en su intento de alta, 200 en el login de administrador y 201 en el alta final. La última respuesta contiene el ID del artista creado.
 
 El JWT de acceso caduca por defecto a los 15 minutos. El refresh es opaco, se guarda como hash y rota al renovar. La reutilización revoca la familia. Logout revoca la renovación y el access ya emitido puede durar hasta su expiración. Para recuperación, el backend envía un JWT de propósito exclusivo por correo. Restablecer la contraseña consume el permiso e invalida sesiones previas.
 

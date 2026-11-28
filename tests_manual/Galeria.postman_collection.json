@@ -3,12 +3,19 @@
     "name": "Galería de arte · Alta de artista por administrador",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    }
+  ],
   "item": [
     {
-      "name": "1. Iniciar sesión como administrador",
+      "name": "1. Intentar alta sin token",
       "request": {
         "method": "POST",
-        "url": "http://127.0.0.1:8000/api/v1/auth/login",
+        "url": "{{base_url}}/api/v1/artistas",
         "header": [
           {
             "key": "Content-Type",
@@ -17,7 +24,54 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"admin@galeria.cl\",\n  \"password\": \"{{admin_password}}\"\n}",
+          "raw": "{\n  \"nombre_artistico\": \"Artista de demostración\",\n  \"email\": \"{{correo_demo}}\",\n  \"nacionalidad\": \"Chilena\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.variables.set('correo_demo', 'demo.' + pm.variables.replaceIn('{{$guid}}') + '@example.com');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Alta rechazada con 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableCookies": true
+      }
+    },
+    {
+      "name": "2. Iniciar sesión como visitante",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"visitante@galeria.cl\",\n  \"password\": {{login_password_json}}\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -29,8 +83,12 @@
         {
           "listen": "prerequest",
           "script": {
+            "type": "text/javascript",
             "exec": [
-              "pm.collectionVariables.unset('access_token');"
+              "pm.collectionVariables.unset('visitante_access_token');",
+              "const password = pm.environment.get('visitante_password');",
+              "if (!password) throw new Error('Configura la contraseña en el entorno local de Postman.');",
+              "pm.variables.set('login_password_json', JSON.stringify(password));"
             ]
           }
         },
@@ -39,19 +97,135 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "const datos = pm.response.json();",
-              "pm.test('Sesión de administrador', () => { pm.response.to.have.status(200); pm.expect(datos.usuario.rol).to.eql('admin'); pm.expect(datos.access_token).to.be.a('string').and.not.empty; });",
-              "if (pm.response.code === 200 && datos.usuario.rol === 'admin') pm.collectionVariables.set('access_token', datos.access_token);"
+              "pm.test('Login y rol de la cuenta', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const datos = pm.response.json();",
+              "  pm.expect(datos.usuario.rol).to.eql('usuario');",
+              "  pm.expect(datos.access_token).to.be.a('string').and.not.empty;",
+              "  pm.collectionVariables.set('visitante_access_token', datos.access_token);",
+              "});"
             ]
           }
         }
-      ]
+      ],
+      "protocolProfileBehavior": {
+        "disableCookies": true
+      }
     },
     {
-      "name": "2. Crear artista",
+      "name": "3. Intentar alta como visitante",
       "request": {
         "method": "POST",
-        "url": "http://127.0.0.1:8000/api/v1/artistas",
+        "url": "{{base_url}}/api/v1/artistas",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre_artistico\": \"Artista de demostración\",\n  \"email\": \"{{correo_demo}}\",\n  \"nacionalidad\": \"Chilena\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{visitante_access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "pm.variables.set('correo_demo', 'demo.' + pm.variables.replaceIn('{{$guid}}') + '@example.com');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Alta rechazada con 403', () => pm.response.to.have.status(403));",
+              "pm.collectionVariables.unset('visitante_access_token');"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableCookies": true
+      }
+    },
+    {
+      "name": "4. Iniciar sesión como administrador",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@galeria.cl\",\n  \"password\": {{login_password_json}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.unset('access_token');",
+              "const password = pm.environment.get('admin_password');",
+              "if (!password) throw new Error('Configura la contraseña en el entorno local de Postman.');",
+              "pm.variables.set('login_password_json', JSON.stringify(password));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login y rol de la cuenta', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const datos = pm.response.json();",
+              "  pm.expect(datos.usuario.rol).to.eql('admin');",
+              "  pm.expect(datos.access_token).to.be.a('string').and.not.empty;",
+              "  pm.collectionVariables.set('access_token', datos.access_token);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableCookies": true
+      }
+    },
+    {
+      "name": "5. Crear artista como administrador",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/v1/artistas",
         "header": [
           {
             "key": "Content-Type",
@@ -98,7 +272,10 @@
             ]
           }
         }
-      ]
+      ],
+      "protocolProfileBehavior": {
+        "disableCookies": true
+      }
     }
   ]
 }
