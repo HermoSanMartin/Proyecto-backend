@@ -81,6 +81,8 @@ La consulta posterior por ID devolvió 200. También se abrió el registro por H
 
 ### Cómo repetir los tres casos en Postman
 
+La colección de la revisión 6327339 se ejecutó completa con Newman 6.2.3 contra Uvicorn por HTTP en el equipo local, con SQLite temporal migrado por Alembic y las cuentas del seeder. En orden, devolvió 401, 200, 403, 200 y 201. Pasaron las seis aserciones. La prueba institucional descrita arriba se hizo con HTTPX.
+
 Importa la [colección de Postman](../tests_manual/Galeria.postman_collection.json). La colección usa `http://127.0.0.1:8000` por defecto. Para probar Kubero, crea y selecciona un entorno de Postman con `base_url` igual a `https://galeria-arte-g7.inf.uct.cl` (sin barra final). Selecciona un entorno de Postman y define como valores privados locales `visitante_password` y `admin_password`. Ejecuta las cinco peticiones en orden, manualmente o desde el Runner. Espera 401 en el alta sin token, 200 en el login de visitante, 403 en su intento de alta, 200 en el login de administrador y 201 en el alta final. La última respuesta contiene el ID del artista creado. Guarda el ID y el nombre devueltos para la comprobación de persistencia.
 
 ### Persistencia del artista · Procedimiento para Sebastián
